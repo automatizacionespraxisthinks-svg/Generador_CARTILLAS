@@ -1,0 +1,21 @@
+# ---------------------------------------------------------------- entorno de Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# ---------------------------------------------------------------- datos reales (NO se suben)
+# praxis.db es el banco de ejercicios y las cartillas de la empresa: contenido propio,
+# pesado y cambiante. El respaldo se hace aparte, no con Git.
+datos/
+lote_prueba/
+
+# ---------------------------------------------------------------- salidas que se vuelven a generar
+docs/muestra_generada/
+docs/verificacion_maquetacion/
+*.tmp
+
+# ---------------------------------------------------------------- sistema operativo
+Thumbs.db
+desktop.ini
+~$*

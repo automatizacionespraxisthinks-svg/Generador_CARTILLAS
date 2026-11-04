@@ -1,0 +1,589 @@
+<title>Simulacros PRAXIS en vista previa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Baloo+2:wght@500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#EDF0EA;--panel:#FFFFFF;--ink:#16233F;--muted:#586472;--line:#D3D9D0;--line-strong:#AEB8AA;
+  --accent:#4C7D2C;--accent-ink:#2E5118;--accent-soft:#E2EFD7;
+  --warn-bg:#FFF0D2;--warn-ink:#7A4A00;--ok-bg:#DDF0E4;--ok-ink:#1D5C35;--err:#B3261E;
+  --shadow:0 1px 2px rgba(22,35,63,.08),0 8px 24px rgba(22,35,63,.08);
+  --ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --doc:Tahoma,Verdana,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0F151B;--panel:#17212A;--ink:#E4EAF0;--muted:#9AA7B3;--line:#2A3642;--line-strong:#415160;
+  --accent:#8CC46B;--accent-ink:#BDE5A3;--accent-soft:#223A1C;
+  --warn-bg:#3A2B10;--warn-ink:#F3C878;--ok-bg:#16361F;--ok-ink:#9FE0B2;--err:#FF8A80;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --ground:#0F151B;--panel:#17212A;--ink:#E4EAF0;--muted:#9AA7B3;--line:#2A3642;--line-strong:#415160;
+  --accent:#8CC46B;--accent-ink:#BDE5A3;--accent-soft:#223A1C;
+  --warn-bg:#3A2B10;--warn-ink:#F3C878;--ok-bg:#16361F;--ok-ink:#9FE0B2;--err:#FF8A80;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:24px 48px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:22px;margin:0 0 10px;line-height:1.2;text-wrap:balance}
+h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+p{margin:0}
+.lede{color:var(--muted);max-width:70ch;margin-top:8px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.tab{flex:0 0 auto;font:inherit;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 14px;text-align:left;cursor:pointer;min-width:170px}
+.tab small{display:block;color:var(--muted);font-size:12px}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.tab:focus-visible,.seg button:focus-visible,select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:inherit;font-size:14px;border:0;background:var(--panel);color:var(--ink);padding:8px 14px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.ctrls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:14px}
+select,input[type=text]{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)}
+label.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px 24px;align-items:start}
+.kv dt{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.kv dd{margin:2px 0 0;font-weight:700}
+.code{display:flex;gap:6px;flex-wrap:wrap}
+.pair{display:flex;flex-direction:column;align-items:center}
+.pair b{font-family:var(--mono);font-weight:600;font-size:20px;background:var(--ground);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.pair small{font-size:11px;color:var(--muted)}
+.map{margin-top:16px}
+.strip{display:flex;height:16px;border-radius:5px;overflow:hidden;gap:2px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 16px;margin-top:10px;font-size:13px}
+.legend span{display:flex;gap:8px;align-items:center}
+.legend i{width:10px;height:10px;border-radius:2px;flex:0 0 auto}
+.legend em{font-style:normal;font-family:var(--mono);color:var(--muted);font-size:12px;min-width:62px;font-variant-numeric:tabular-nums}
+.sheets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:22px}
+.sheets.big{grid-template-columns:1fr}
+.sheets.big .sheetbox{max-width:860px;margin:0 auto;width:100%}
+.sheetbox h3{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bw{font-weight:400;text-transform:none;letter-spacing:0}
+/* hoja carta con márgenes estrechos: 1,27 cm = 5.88% del ancho */
+.sheet{container-type:inline-size;aspect-ratio:8.5/11;max-width:100%;background:#fff;color:#111;box-shadow:var(--shadow);border-radius:3px;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:5.88cqw}
+.guides .sheet::before,.guides .flow::before{content:"";position:absolute;inset:5.88cqw;outline:1px dashed #D9480F;pointer-events:none;z-index:3}
+.guides .sheet::after{content:"1,27 cm";position:absolute;top:1.6cqw;left:50%;transform:translateX(-50%);font:1.3cqw var(--ui);color:#D9480F;z-index:3}
+.foot{position:absolute;left:5.88cqw;right:5.88cqw;bottom:2.3cqw;display:flex;justify-content:space-between;font-family:var(--doc);font-size:1.3cqw;color:#333}
+/* portada */
+.pt{font-family:var(--display);font-weight:800;color:#1F3A68;font-size:5.4cqw;text-align:center;line-height:1.05}
+.pimg{margin:1.6cqw 0;height:29cqw;border-radius:1.5cqw;background:repeating-linear-gradient(135deg,#F1F4EE 0 1.2cqw,#E6ECE1 1.2cqw 2.4cqw);display:grid;place-items:center;color:#6B7A62;font-family:var(--ui);font-size:1.9cqw}
+.prow{display:grid;grid-template-columns:1fr 1fr;gap:2cqw;margin-bottom:1.6cqw}
+.pill{border:.45cqw solid #5B8F3A;border-radius:2cqw;text-align:center;font-family:var(--display);font-weight:700;color:#3F6B2A;font-size:2.3cqw;padding:.8cqw .5cqw;line-height:1.2}
+.pinfo{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4cqw;margin-bottom:2cqw}
+.pinfo div{border:.3cqw solid #333;border-radius:1.6cqw;text-align:center;font-family:var(--display);font-size:2cqw;line-height:1.15;padding:1cqw .4cqw;display:flex;flex-direction:column;justify-content:center}
+.pinfo b{font-size:3cqw;font-weight:800}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:2cqw;flex:1;min-height:0}
+.pbox{border:.3cqw solid #333;border-radius:2cqw;padding:1.2cqw 1.6cqw;position:relative;overflow:hidden}
+.phead{display:flex;justify-content:space-between;font-family:var(--display);font-weight:700;color:#3F6B2A;font-size:2.1cqw;border:.4cqw solid #5B8F3A;border-radius:1.6cqw;padding:.5cqw 1.4cqw;margin-bottom:1.2cqw}
+.arow{display:flex;justify-content:space-between;font-family:var(--display);font-weight:700;border-bottom:.22cqw solid #222;padding:.25cqw 1.6cqw .1cqw}
+.arow span:last-child{min-width:4cqw;text-align:center;font-variant-numeric:tabular-nums}
+.inst{font-family:var(--ui);font-size:1.75cqw;line-height:1.35;text-align:justify}
+.inst p{margin-bottom:.6cqw}
+.ali{margin-top:2.6cqw;border:.3cqw solid #333;border-radius:2cqw;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5cqw;padding:2.4cqw 1.5cqw 1.4cqw;position:relative;height:17cqw}
+.ali::before{content:"Una Alianza Que Construye Futuro";position:absolute;top:-2cqw;left:50%;transform:translateX(-50%);background:#fff;border:.4cqw solid #5B8F3A;border-radius:1.6cqw;font-family:var(--display);font-weight:700;color:#3F6B2A;font-size:1.9cqw;padding:.2cqw 2cqw;white-space:nowrap}
+.logo{display:grid;place-items:center;text-align:center;font-family:var(--display);font-size:1.7cqw;line-height:1.15;color:#1F3A68;border-radius:1.2cqw}
+.logo.manual{border:.25cqw dashed #B06A00;color:#8A5200;background:#FFF7E8}
+/* cuerpo: blanco y negro */
+.cols{flex:1;min-height:0;column-count:2;column-gap:5.88cqw;column-rule:.12cqw solid #555;column-fill:auto;font-family:var(--doc);font-size:1.62cqw;line-height:1.32;overflow:hidden;margin-bottom:1cqw}
+.st{font-weight:700;text-align:center;font-size:2.1cqw;margin:0 0 1.4cqw;break-after:avoid;letter-spacing:.02em}
+.st.mid{margin-top:2cqw}
+.q{margin-bottom:1.5cqw}
+.q p{margin:0 0 .35cqw}
+.op{padding:.05cqw .5cqw;margin-left:-.5cqw !important;border-radius:.6cqw}
+.op.key,.oc.key{background:#E4E4E4;box-shadow:inset 0 0 0 .18cqw #111}
+.op{padding-left:2.4cqw !important;text-indent:-1.9cqw}
+.orow{display:grid;margin:0 0 .35cqw}
+.r4{grid-template-columns:repeat(4,1fr)}
+.r2{grid-template-columns:1fr 1fr;row-gap:.25cqw}
+.oc{padding:0 .5cqw;border-radius:.6cqw}
+.oline{display:flex;gap:1cqw;align-items:baseline;margin:0 0 .35cqw}
+.oline .orow{flex:1;margin:0}
+.fmts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.fmt{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.fmt b{font-size:15px}
+.fmt small{color:var(--muted);font-size:13px}
+.fmt .kind{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);font-weight:700}
+.fmt button{margin-top:auto;align-self:flex-start;font:inherit;font-size:14px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.steps{margin:0 0 14px;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.drop{border:2px dashed var(--line-strong);border-radius:12px;padding:16px;text-align:center;color:var(--muted);margin-top:14px}
+.res{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.res div{display:flex;gap:10px;align-items:flex-start;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.st-ok{background:var(--ok-bg);color:var(--ok-ink)}.st-no{background:#FBE3E1;color:#8C1D18}.st-wait{background:var(--warn-bg);color:var(--warn-ink)}
+.pillst{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.inf{font-style:italic;font-size:1.1cqw;color:#222;margin-top:.3cqw !important}
+.ref{font-weight:700;margin-bottom:.6cqw !important}
+.cred{text-align:right;font-style:italic;font-size:1.42cqw;margin-bottom:1cqw !important}
+.dt{border-collapse:collapse;width:100%;font-size:1.42cqw;margin:.6cqw 0 .8cqw}
+.dt th,.dt td{border:.1cqw solid #000;padding:.25cqw .6cqw;text-align:center}
+.prule{border:0;border-top:1px solid #000;margin:1.6cqw 0 .9cqw}
+.parte{font-weight:700;margin:0 0 .3cqw !important;break-after:avoid}
+.pinstr{font-style:italic;margin:0 0 1cqw !important;break-before:avoid}
+.aviso{display:block;border:.22cqw solid #000;border-radius:.7cqw;text-align:center;padding:1.1cqw .8cqw;font-weight:700;margin:.2cqw auto .6cqw;width:78%;letter-spacing:.06em;font-size:1.5cqw}
+.said{font-style:italic}
+.gap{font-weight:700;white-space:nowrap}
+.gap u{display:inline-block;width:5cqw;text-decoration:none;border-bottom:.12cqw solid #000;margin-left:.4cqw;transform:translateY(-.3cqw)}
+.rtext{text-align:justify;margin-bottom:.5cqw !important}
+.more{position:absolute;left:0;right:0;bottom:4.2cqw;text-align:center;font-family:var(--ui);font-size:1.3cqw;color:#8a8a8a}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+/* Inglés en flujo continuo */
+.flowbox{max-width:900px;margin:0 auto;width:100%}
+.flow{container-type:inline-size;background:#fff;color:#111;box-shadow:var(--shadow);border-radius:3px;position:relative;padding:5.88cqw}
+.flow .cols{overflow:visible;column-fill:balance;font-size:1.62cqw}
+.partmap{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.partmap span{font-size:13px;border:1px solid var(--line-strong);border-radius:999px;padding:3px 10px;font-variant-numeric:tabular-nums}
+.partmap b{font-family:var(--mono);font-weight:600}
+/* excel */
+.xl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.xl table{border-collapse:collapse;font-size:13px;min-width:1100px;width:100%;font-variant-numeric:tabular-nums}
+.xl th,.xl td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+.xl thead tr:first-child th{background:var(--ground);color:var(--muted);font-family:var(--mono);font-size:11px;text-align:center;font-weight:400}
+.xl thead tr:nth-child(2) th{background:var(--accent-soft);color:var(--accent-ink)}
+.xl td.c{font-family:var(--mono)}
+.xl td.k{font-weight:700;text-align:center}
+.xl td.void{background:repeating-linear-gradient(135deg,transparent 0 6px,var(--ground) 6px 12px)}
+.xl td.j{min-width:260px;color:var(--muted)}
+/* descarga */
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px 20px;align-items:end}
+.dl label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.dl input{width:100%}
+.files{font-family:var(--mono);font-size:14px;display:flex;flex-direction:column;gap:2px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:10px 18px;background:var(--ink);color:var(--panel);cursor:pointer}
+.err{color:var(--err);font-size:13px;margin-top:4px;min-height:1.2em}
+.msg{font-size:14px;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--ok-bg);color:var(--ok-ink)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:20px}
+ul.rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.ask{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.ask li{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 12px}
+.ask li b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--ok-bg);color:var(--ok-ink)}
+.tag.no{background:var(--warn-bg);color:var(--warn-ink)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Simulacros PRAXIS en vista previa</h1>
+    <p class="lede">Portada, páginas del cuadernillo, sección de Inglés, Excel y descarga para cada tipo de simulacro, según el Estándar v1.1. Márgenes estrechos de 1,27 cm; cuerpo en blanco y negro, portada a color. Opciones siempre verticales y cada pregunta completa en una sola columna, verificado en Word. La cartilla se entrega en Word editable para ajustes finales. Las preguntas son de ejemplo: lo que se revisa es el formato.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Tipo de simulacro" id="tabs"></nav>
+
+  <div class="bar">
+    <div class="seg" id="sessions" aria-label="Sesión"></div>
+    <div class="ctrls">
+      <label for="plant">Plantilla
+        <select id="plant"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      </label>
+      <label class="chk" for="showkey"><input type="checkbox" id="showkey" checked> Marcar la correcta (solo vista previa)</label>
+      <label class="chk" for="guides"><input type="checkbox" id="guides"> Mostrar márgenes</label>
+      <label class="chk" for="big"><input type="checkbox" id="big"> Páginas grandes</label>
+    </div>
+  </div>
+
+  <section class="panel" aria-labelledby="sumtitle">
+    <h2 id="sumtitle">Resumen</h2>
+    <dl class="summary kv" id="summary"></dl>
+    <div class="map">
+      <div class="strip" id="strip"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sheets" id="sheets"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="engtitle">
+    <h2 id="engtitle">Sección de Inglés completa</h2>
+    <div class="bar" style="margin-bottom:12px">
+      <div class="seg" id="engmode" aria-label="Versión de Inglés">
+        <button data-e="per" aria-pressed="true">Periódico · 28 preguntas · 5 partes</button>
+        <button data-e="icf" aria-pressed="false">ICFES · 55 preguntas · 7 partes</button>
+      </div>
+    </div>
+    <div class="partmap" id="partmap"></div>
+    <p class="note" style="margin:0 0 12px">Vista continua, sin cortes de página. Cada parte arranca con una línea de 0,25 pt y su subtítulo con el rango real; la instrucción va en cursiva. En «completar el texto» los espacios muestran el número real de la pregunta.</p>
+    <div class="flowbox" id="engwrap"><div class="flow"><div class="cols" id="eng"></div></div></div>
+  </section>
+
+  <section class="panel" aria-labelledby="xltitle">
+    <h2 id="xltitle">Excel de claves · hoja «Claves»</h2>
+    <p class="note" id="xlnote" style="margin:0 0 10px"></p>
+    <div class="xl"><table id="xl"></table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="dltitle">
+    <h2 id="dltitle">Descargar</h2>
+    <p class="note" style="margin:0 0 12px">La cartilla sale en Word editable (.docx) para ajustes finales: logo de la institución, vocabulario, relleno. No se debe cambiar a mano el orden de preguntas u opciones, porque el Excel dejaría de coincidir.</p>
+    <div class="dl">
+      <div><label for="desc">Nombre descriptivo</label><input type="text" id="desc" value="Tercer periodo 2026"></div>
+      <div><label for="fname">Nombre del archivo</label><input type="text" id="fname" aria-describedby="fnerr"><div class="err" id="fnerr" role="alert"></div></div>
+      <div><label>Se guardan</label><div class="files" id="files"></div></div>
+      <div><button class="btn" id="dlbtn" type="button">Descargar Word y Excel</button></div>
+    </div>
+    <div id="dlmsg" hidden class="msg"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="fmtitle">
+    <h2 id="fmtitle">Formatos y carga de preguntas</h2>
+    <p class="note" style="margin:0 0 12px">Así se verá en el sistema la pantalla para descargar los formatos en Word, llenarlos y subir las preguntas.</p>
+    <ol class="steps">
+      <li>Descarga la plantilla del tipo de pregunta: ejercicio suelto, bloque de lectura o parte de Inglés.</li>
+      <li>Llénala siguiendo el ejemplo del mismo tipo: tiene todo en el formato correcto.</li>
+      <li>Revisa la lista de chequeo del instructivo.</li>
+      <li>Sube uno o varios archivos. Cada uno entra completo o se rechaza con los motivos exactos.</li>
+    </ol>
+    <div class="fmts" id="fmts"></div>
+    <div class="drop" id="drop">Arrastra aquí tus archivos .docx o haz clic para elegirlos</div>
+    <div class="res" aria-label="Resultado de ejemplo">
+      <div><span class="pillst st-ok">Aceptado</span><span><b>EJEMPLO_1_EJERCICIO_SUELTO.docx</b> · entró al banco como <span style="font-family:var(--mono)">MA1-77-000124</span></span></div>
+      <div><span class="pillst st-no">Rechazado</span><span><b>Fracciones_7.docx</b> · Pregunta 1, opción C: «3/4» está en texto plano; escríbelo con superíndice y subíndice (³/₄). · La columna Grado de la TABLA DE EXCEL está vacía.</span></div>
+      <div><span class="pillst st-wait">Por confirmar</span><span><b>Ecuaciones_2.docx</b> · La temática «Ecuaciones lineles» se parece a «Ecuaciones lineales». ¿Es la misma?</span></div>
+    </div>
+    <div id="fmsg" hidden class="msg"></div>
+  </section>
+
+  <div class="two">
+    <section class="panel" aria-labelledby="rt">
+      <h2 id="rt">Reglas que aplican a este tipo</h2>
+      <ul class="rules" id="rules"></ul>
+    </section>
+    <section class="panel" aria-labelledby="at">
+      <h2 id="at">Ajustes a confirmar</h2>
+      <ul class="ask" id="ask"></ul>
+    </section>
+  </div>
+</div>
+
+<script>
+const PLANT=['BACDCDABDBACDCBABCDAACBDABCDCABDADBCCABDDCBACABDDABCCADBBCADDBCAABCDACDBDABCDCBACABDDACBBCDACDBAACBDCDABCADBBCADBACDDACBCBADBACDBCADBDACADCB','ADCBCABDDABCDCABDABCABDCCABDBDCACBDACADBCBADBCDACBDACDABBCDAACDBDACBBACDABCDCBADBDCADBCADBACBDACDCABBCADCDBADBACBADCABDCDBCACDABCDBADACBBCAD','BDCAACBDCBDAADCBADBCDACBABCDDABCCABDDACBBACDACDBCADBDCABDBACABDCACBDACDBBCADBDACABCDCBADBCDACDBADBCAACDBCABDACDBBDACBCDACDABBACDACDBDCABDBAC','DCBABDACDCBACBADACBDDCABADBCDBCABCADBACDBCDABADCDBACBCDABDCACBADBACDADBCDBCACBDADBACCDBADCBABDCACDBADACBADBCCBDABDCAACBDCABDDACBBDACABDCDBCA','BCADBCDAACBDBCDACADBBACDDACBCBADCDABCADBCDBADCBADBACDACBBACDABCDADBCADCBCDABADBCACDBCBDABDCACBADDACBCBDACDABCABDCDABABCDCBADBDACCDABDACBCBDA'];
+const COL={mat:'#3F6FB5',len:'#B8860B',nat:'#5E9632',soc:'#C8641E',fil:'#1F8A8A',ing:'#A0289A',inf:'#6A4FB3',edf:'#C62828',art:'#D2457F',rel:'#8D5A2B',eti:'#2E7D5B',dib:'#4F6D7A',ele:'#1A3A6B',mec:'#555555'};
+const sup=(a,b)=>`<sup>${a}</sup>/<sub>${b}</sub>`;
+const Q=(e,o,m,s,p,c,d,t,n,j)=>({e,o,m,s,p,c,d,t,n,j});
+const M1='Matemáticas',LC='Lengua Castellana',CN='Ciencias Naturales';
+const CRED='Texto elaborado para este simulacro. PRAXIS · THINKS.';
+
+const BANK={
+MAT:[
+ Q('Una tienda aplica un descuento del 20 % sobre un artículo que cuesta $45.000. ¿Cuál es el precio final del artículo?',['$36.000','$9.000','$40.000','$44.980'],M1,'Matemáticas I','Numérico','Resolución de problemas','DBA 2','Porcentajes','Básico','El 20 % de 45.000 es 9.000, que se resta del precio inicial.'),
+ Q('¿Cuál es el valor de <i>x</i> en la ecuación 3<i>x</i> + 7 = 22?',['5','15',sup(29,3),'7'],M1,'Matemáticas I','Variacional','Razonamiento','DBA 7','Ecuaciones lineales','Básico','Al restar 7 y dividir entre 3 se obtiene el valor que cumple la igualdad.'),
+ Q('El área de un cuadrado es 49 cm². ¿Cuánto mide su perímetro?',['28 cm','14 cm','49 cm','196 cm'],M1,'Matemáticas I','Espacial y métrico','Resolución de problemas','DBA 5','Área y perímetro','Medio','El lado mide la raíz cuadrada del área, y el perímetro es cuatro veces el lado.'),
+ Q('Si 2<sup><i>x</i></sup> = 32, ¿cuál es el valor de <i>x</i>?',['5','16','6','4'],M1,'Matemáticas I','Numérico','Razonamiento','DBA 1','Potenciación','Medio','Treinta y dos resulta de multiplicar el dos por sí mismo cinco veces.'),
+ {blk:true,ref:'información',res:'<p>La tabla muestra el número de libros que leyeron cuatro estudiantes durante un mes.</p><table class="dt"><tr><th>Estudiante</th><th>Libros</th></tr><tr><td>Ana</td><td>4</td></tr><tr><td>Luis</td><td>6</td></tr><tr><td>Marta</td><td>3</td></tr><tr><td>Pedro</td><td>7</td></tr></table>',qs:[
+  Q('¿Cuál es el promedio de libros leídos por estudiante?',['5','4','6','20'],M1,'Matemáticas I','Aleatorio','Comunicación','DBA 9','Medidas de tendencia central','Básico','La suma de los libros es 20 y se reparte entre cuatro estudiantes.'),
+  Q('¿Qué porcentaje del total de libros leyó Luis?',['30 %','6 %','25 %','60 %'],M1,'Matemáticas I','Aleatorio','Razonamiento','DBA 9','Porcentajes','Medio','Seis de veinte libros equivalen a tres décimos del total.'),
+  Q('Si el mes siguiente Marta lee el doble de libros, ¿cuántos leerá?',['6','5','9','3'],M1,'Matemáticas I','Numérico','Resolución de problemas','DBA 2','Operaciones con naturales','Básico','El doble de tres es seis.')]},
+ Q('Un ángulo mide 35°. ¿Cuánto mide su ángulo complementario?',['55°','145°','65°','325°'],M1,'Matemáticas I','Espacial y métrico','Razonamiento','DBA 4','Ángulos','Básico','Dos ángulos complementarios suman 90°.'),
+ Q('En una bolsa hay 3 bolas rojas y 5 azules. Si se saca una bola al azar, ¿cuál es la probabilidad de que sea roja?',[sup(3,8),sup(3,5),sup(5,8),sup(1,3)],M1,'Matemáticas I','Aleatorio','Resolución de problemas','DBA 10','Probabilidad','Medio','Hay tres casos favorables entre ocho posibles.'),
+ Q('¿Cuál expresión es equivalente a 4(<i>x</i> − 3)?',['4<i>x</i> − 12','4<i>x</i> − 3','<i>x</i> − 12','4<i>x</i> + 12'],M1,'Matemáticas I','Variacional','Comunicación','DBA 7','Expresiones algebraicas','Básico','La propiedad distributiva multiplica el cuatro por cada término del paréntesis.')
+],
+ESP:[
+ Q('¿Cuál palabra es sinónimo de «efímero»?',['Pasajero','Eterno','Enorme','Oscuro'],LC,'Español','','Semántica','DBA 2','Sinónimos','Medio','La palabra propuesta significa que dura poco tiempo.'),
+ Q('¿En cuál oración la palabra subrayada es un adjetivo?',['El perro <u>negro</u> ladró.','El <u>perro</u> ladró fuerte.','El perro <u>ladró</u> toda la noche.','El perro ladró <u>fuerte</u>.'],LC,'Español','','Gramática','DBA 3','Categorías gramaticales','Básico','La palabra subrayada describe una cualidad del sustantivo.'),
+ Q('¿Qué signo completa correctamente la oración «Compré tres frutas ___ peras, manzanas y uvas»?',['Dos puntos','Punto y coma','Punto final','Signo de interrogación'],LC,'Español','','Pragmática','DBA 4','Signos de puntuación','Básico','Antes de una enumeración anunciada se usan dos puntos.'),
+ Q('¿Qué tipo de texto tiene como propósito principal convencer al lector?',['Argumentativo','Narrativo','Descriptivo','Instructivo'],LC,'Español','','Pragmática','DBA 6','Tipologías textuales','Básico','Este tipo de texto defiende una tesis con razones.')
+],
+LC:[
+ {blk:true,ref:'lectura',res:'<p class="rtext">Durante siglos, los mapas no solo describieron el territorio: también lo ordenaron. Quien trazaba una frontera decidía qué quedaba adentro y qué quedaba afuera, y esa decisión, repetida en escuelas y oficinas, terminaba pareciendo natural. Por eso leer un mapa exige preguntarse quién lo hizo, para quién y con qué propósito.</p>',qs:[
+  Q('¿Cuál es la idea principal del texto?',['Los mapas expresan decisiones de quienes los elaboran.','Los mapas antiguos contenían errores geográficos.','Las fronteras se trazan según los accidentes naturales.','Las escuelas enseñan a dibujar mapas precisos.'],LC,'Lectura Crítica','','Comprende el sentido global','','Idea principal','','La lectura sostiene que un mapa ordena el territorio según quien lo traza.'),
+  Q('¿Qué propósito cumple la última oración del texto?',['Proponer una manera crítica de leer los mapas.','Resumir la historia de la cartografía.','Criticar a las oficinas de gobierno.','Describir cómo se dibuja una frontera.'],LC,'Lectura Crítica','','Reflexiona a partir del texto','','Propósito comunicativo','','La oración cierra con preguntas que el lector debe hacerse.'),
+  Q('Según el texto, ¿por qué una frontera termina «pareciendo natural»?',['Porque la decisión que la creó se repite hasta volverse costumbre.','Porque coincide con ríos y montañas.','Porque la aprueban todos los habitantes.','Porque aparece en los mapas más antiguos.'],LC,'Lectura Crítica','','Identifica contenidos locales','','Inferencia','','El texto atribuye esa apariencia a la repetición en escuelas y oficinas.')]}
+],
+QUI:[
+ Q('¿Cuántos átomos de hidrógeno hay en una molécula de H<sub>2</sub>SO<sub>4</sub>?',['2','4','1','7'],CN,'Química','Entorno químico','Uso del conocimiento','DBA 4','Fórmulas químicas','Básico','El subíndice que acompaña al hidrógeno indica cuántos átomos hay.'),
+ Q('¿Cómo se clasifica una sustancia con pH igual a 3?',['Ácida','Básica','Neutra','Anfótera'],CN,'Química','Entorno químico','Explicación de fenómenos','DBA 5','pH','Básico','Los valores de pH menores que 7 corresponden a sustancias ácidas.')
+],
+CN:[
+ Q('Un carro recorre 120 km en 2 horas con rapidez constante. ¿Cuál es su rapidez?',['60 km/h','240 km/h','120 km/h','30 km/h'],CN,'Física','','','','','','La rapidez es la distancia recorrida dividida entre el tiempo.'),
+ Q('¿Qué organelo produce la mayor parte de la energía de la célula?',['Mitocondria','Ribosoma','Vacuola','Pared celular'],CN,'Biología','','','','','','La respiración celular ocurre en ese organelo.')
+],
+INF:[
+ Q('¿Qué combinación de teclas se usa normalmente para copiar un texto seleccionado?',['Ctrl + C','Ctrl + V','Ctrl + Z','Ctrl + P'],'Informática','','','Uso de herramientas','','Atajos de teclado','Básico','Esa combinación guarda una copia de lo seleccionado.'),
+ Q('¿Cuál de estos dispositivos es de entrada?',['Teclado','Monitor','Impresora','Parlante'],'Informática','','','Conceptos básicos','','Periféricos','Básico','Este dispositivo envía información al computador.'),
+ Q('¿Qué unidad de almacenamiento es la mayor?',['Terabyte','Megabyte','Kilobyte','Byte'],'Informática','','','Conceptos básicos','','Unidades de información','Medio','Un terabyte es la mayor de las cuatro unidades.'),
+ Q('¿Qué es un navegador web?',['Un programa para visitar páginas de internet','Un cable de red','Un tipo de virus','Una memoria USB'],'Informática','','','Conceptos básicos','','Internet','Básico','El navegador interpreta y muestra las páginas web.'),
+ Q('¿Qué programa es más adecuado para organizar datos en filas y columnas?',['Una hoja de cálculo','Un procesador de texto','Un editor de audio','Un reproductor de video'],'Informática','','','Uso de herramientas','','Ofimática','Básico','Las hojas de cálculo organizan datos en celdas.')
+],
+EDF:[
+ Q('¿Cuál es el principal objetivo del calentamiento antes de hacer ejercicio?',['Preparar el cuerpo para el esfuerzo','Aumentar el cansancio','Reemplazar la hidratación','Disminuir la flexibilidad'],'Educación Física','','','Cuidado del cuerpo','','Calentamiento','Básico','El calentamiento eleva la temperatura muscular y previene lesiones.'),
+ Q('¿Cuántos jugadores de cada equipo están en la cancha en un partido de fútbol de salón?',['5','11','7','6'],'Educación Física','','','Reglamentos','','Deportes de conjunto','Básico','El fútbol de salón se juega con cinco por equipo.'),
+ Q('¿Qué capacidad física se trabaja al correr distancias largas a ritmo constante?',['Resistencia','Velocidad','Flexibilidad','Equilibrio'],'Educación Física','','','Capacidades físicas','','Resistencia','Medio','Sostener un esfuerzo prolongado desarrolla esta capacidad.')
+],
+ETI:[
+ Q('¿Qué valor se evidencia cuando una persona devuelve un objeto que encontró?',['Honestidad','Puntualidad','Creatividad','Competitividad'],'Ética','','','Convivencia','','Valores','Básico','Devolver lo ajeno es un acto honesto.'),
+ Q('¿Qué actitud favorece la solución pacífica de un conflicto?',['Escuchar a la otra persona','Imponer la propia opinión','Evitar hablar del tema','Buscar a un culpable'],'Ética','','','Convivencia','','Resolución de conflictos','Básico','La escucha permite entender la posición del otro.')
+],
+DIB:[
+ Q('¿Qué instrumento se usa para trazar circunferencias?',['Compás','Escuadra','Transportador','Regla T'],'Dibujo','','','Instrumentos','','Trazos básicos','Básico','El compás mantiene un radio constante.'),
+ Q('En la vista frontal de un objeto, ¿qué dimensiones se representan?',['Ancho y alto','Ancho y profundidad','Alto y profundidad','Solo la profundidad'],'Dibujo','','','Representación','','Vistas ortogonales','Medio','La vista frontal muestra el objeto de frente.'),
+ Q('¿Qué tipo de línea se usa para representar aristas ocultas?',['Discontinua','Continua gruesa','Ondulada','De cadena'],'Dibujo','','','Normas de dibujo','','Tipos de línea','Básico','La norma usa línea discontinua para lo que no se ve.')
+],
+ELE:[
+ Q('¿Qué instrumento se usa para medir el voltaje en un circuito?',['Voltímetro','Amperímetro','Termómetro','Barómetro'],'Electricidad','','','Medición','','Instrumentos de medida','Básico','El voltímetro mide la diferencia de potencial.'),
+ Q('¿Cuál de estos materiales es buen conductor de la electricidad?',['Cobre','Caucho','Madera seca','Vidrio'],'Electricidad','','','Conceptos básicos','','Conductores y aislantes','Básico','Los metales como el cobre conducen bien la corriente.'),
+ Q('En un circuito en serie, ¿qué ocurre si se funde uno de los bombillos?',['Se apagan todos','Solo se apaga ese','Brillan más los otros','No pasa nada'],'Electricidad','','','Circuitos','','Circuitos en serie','Medio','En serie la corriente tiene un solo camino.')
+]
+};
+
+/* ---------- Inglés ---------- */
+const d=(e,o)=>({e,o});
+const DESC=[d('You use this to open a door.',['key','spoon','pencil','towel']),d('People go here to see a doctor.',['hospital','library','bakery','stadium']),d('You wear these on your feet.',['shoes','gloves','glasses','hats']),d('This animal gives us milk.',['cow','eagle','shark','spider']),d('You need this to know the time.',['watch','ruler','map','brush']),d('It is the season after summer.',['autumn','spring','winter','holiday'])];
+const SIGN=[d('PLEASE BE QUIET',['library','swimming pool','football stadium','market']),d('KEEP OFF THE GRASS',['park','kitchen','bank','cinema']),d('PLATFORM 3 · TRAINS TO BOGOTÁ',['train station','hospital','school','supermarket']),d('WASH YOUR HANDS BEFORE EATING',['restaurant','bookshop','cinema','bus stop']),d('DO NOT TOUCH THE PAINTINGS',['museum','hospital','swimming pool','airport']),d('CHECK-IN CLOSES 40 MINUTES BEFORE DEPARTURE',['airport','library','bakery','theatre'])];
+const CONV=[d('How old are you?',["I'm twelve.","I'm fine, thanks.","It's Monday.","At six o'clock."]),d('Where do you live?',['In Tunja.','Yes, I do.','By bus.','Every day.']),d('Can I borrow your pen?',['Sure, here you are.',"No, it isn't.","I'm sorry to hear that.","It's on Tuesday."]),d('What time is it?',["It's half past three.","It's very cold.","It's my book.","It's in the box."]),d('Would you like some juice?',['Yes, please.',"I'm from Colombia.",'She is my sister.',"No, I can't swim."]),d("I've lost my keys!",['Oh no! Where did you last see them?',"Yes, they're very nice.",'No, thank you.',"I'd love to."]),d('Thanks for your help.',["You're welcome.",'Me too.','Here you are.','Of course not.'])];
+const LAURA='My name is Laura and I live in Sogamoso with my parents and my little brother, Tomás. Every morning I get up at six o\'clock and I walk to school with my best friend, Sara. My favourite subject is science because I like doing experiments. After school, I play volleyball on Tuesdays and Thursdays. On weekends, my family visits my grandmother, who has a farm with cows, chickens and a big dog called Max. I want to be a veterinarian when I grow up.';
+const LAURA_Q=[d('Who does Laura live with?',['her parents and her brother','her grandmother','her best friend','her aunt and uncle']),d('How does Laura go to school?',['She walks.','She takes the bus.','She rides a bike.','Her father drives her.']),d('Why does Laura like science?',['She likes doing experiments.','It is very easy.','Her friend likes it.','Her mother is a teacher.']),d('When does Laura play volleyball?',['on Tuesdays and Thursdays','every day','on weekends','on Mondays']),d('What animals are on the farm?',['cows, chickens and a dog','horses and cats','only dogs','sheep and goats']),d('Who is Max?',['a dog','Laura\'s brother','a teacher','a cow']),d('What does Laura want to be?',['a veterinarian','a teacher','a farmer','a volleyball player']),d('Where does Laura\'s grandmother live?',['on a farm','in Laura\'s house','near the school','in a hospital']),d('What time does Laura get up?',["at six o'clock",'at seven o\'clock','at noon','at nine o\'clock'])];
+const PLANTS='For many years, scientists believed that plants were passive organisms that simply reacted to light and water. Recent studies, however, suggest a more complex picture. When some plants are attacked by insects, they release chemicals into the air. Nearby plants detect these signals and begin producing substances that make their leaves less attractive to the insects. Some researchers describe this as a form of communication, although others argue that the word is misleading, since plants do not have intentions. What is clear is that plants are far more sensitive to their environment than was once thought, and this discovery may help farmers protect crops without using so many pesticides.';
+const PLANTS_Q=[d('What is the main idea of the text?',['Plants respond to their environment in more complex ways than people believed.','Insects are the main danger for crops.','Farmers should stop growing plants.','Scientists have always understood plants well.']),d('What do some plants do when insects attack them?',['They release chemicals into the air.','They grow faster.','They lose all their leaves.','They produce more light.']),d('How do nearby plants react to the signals?',['They make their leaves less attractive to insects.','They attack the insects.','They stop producing chemicals.','They move away.']),d('Why do some researchers think "communication" is not the right word?',['Because plants do not have intentions.','Because plants cannot detect chemicals.','Because insects cannot hear.','Because the studies are very old.']),d('What does "passive" mean in the first sentence?',['not acting on their own','very dangerous','extremely fast','always hungry']),d('According to the text, what was the old belief about plants?',['They simply reacted to light and water.','They could talk to insects.','They were more intelligent than animals.','They did not need water.']),d('What is the writer\'s attitude towards the discovery?',['positive about its possible uses','angry about the results','not interested in the topic','sure that it is false']),d('How could this discovery help farmers?',['It may reduce the use of pesticides.','It may make plants taller.','It may stop the rain.','It may attract more insects.']),d('Which title is best for the text?',['Do plants talk to each other?','How to kill insects','The history of farming','Why plants need light'])];
+const CLOZE_P={text:'Last Saturday my family and I {1} to the lake. We {2} up very early and took the bus. The weather {3} sunny and warm. My father {4} a big fish, and my mother made sandwiches {5} everybody. In the afternoon we swam {6} played cards. It was {7} best day of the holidays.',o:[['went','go','goes','going'],['got','get','gets','getting'],['was','were','is','be'],['caught','catch','catches','catching'],['for','at','in','on'],['and','but','or','so'],['the','a','an','some']]};
+const CLOZE_E={text:'Coffee is one of {1} most popular drinks in the world. It {2} grown in more than seventy countries, and Colombia is one of the {3} important producers. Coffee plants need warm weather {4} a lot of rain. Farmers pick the beans {5} hand, and then they {6} them in the sun. Many families {7} worked on coffee farms for generations. Today, young people are {8} new ways to sell their coffee {9} the internet.',o:[['the','a','an','some'],['is','are','be','being'],['most','more','much','many'],['and','but','because','so'],['by','on','with','at'],['dry','dries','drying','to dry'],['have','has','is','are'],['finding','find','found','finds'],['on','at','under','of']]};
+const CLOZE_S={text:'Last year, our school started a recycling project. At first, only a few students {1} interested, but the teachers {2} to explain why it was important. They put special bins in every classroom, and each week a different group {3} responsible for collecting the materials. Little by little, more students {4} to separate paper, plastic and glass. The money we earned {5} selling the materials was used to buy books for the library. The project was so {6} that other schools asked us to {7} them how to do it. Now we feel {8} of our work, and we want to {9} it next year.',o:[['were','had','did','made'],['decided','forgot','refused','avoided'],['was','were','had','did'],['began','stopped','refused','forgot'],['from','with','at','of'],['successful','boring','expensive','difficult'],['show','say','speak','look'],['proud','afraid','tired','bored'],['continue','finish','forget','avoid']]};
+const I_DESC='Lee cada descripción y elige la palabra que le corresponde.',I_SIGN='Observa cada aviso y elige el lugar donde puedes encontrarlo.',I_CONV='Lee cada frase y elige la respuesta que completa la conversación.',I_READ='Lee el texto y responde las preguntas.',I_CLOZE='Lee el texto y elige la palabra que completa cada espacio.',I_CLOZE2='Lee el texto y elige la palabra que completa cada espacio por su significado y su estructura.';
+const META={desc:['Lingüística','DBA 1','Básico'],sign:['Pragmática','DBA 2','Básico'],conv:['Sociolingüística','DBA 3','Básico'],read:['Lectora','DBA 5','Medio'],cloze:['Lingüística','DBA 4','Medio']};
+const ENG={
+ per:[{title:'Vocabulario en contexto',k:'desc',instr:I_DESC,qs:DESC.slice(0,5)},{title:'Avisos y anuncios',k:'sign',instr:I_SIGN,qs:SIGN.slice(0,4)},{title:'Conversaciones',k:'conv',instr:I_CONV,qs:CONV.slice(0,5)},{title:'Comprensión de lectura',k:'read',instr:I_READ,text:LAURA,qs:LAURA_Q.slice(0,7)},{title:'Completar el texto',k:'cloze',instr:I_CLOZE,cloze:CLOZE_P}],
+ icf:[{title:'Vocabulario en contexto',k:'desc',instr:I_DESC,qs:DESC},{title:'Avisos y anuncios',k:'sign',instr:I_SIGN,qs:SIGN},{title:'Conversaciones',k:'conv',instr:I_CONV,qs:CONV},{title:'Completar el texto · estructura',k:'cloze',instr:I_CLOZE,cloze:CLOZE_E},{title:'Comprensión de lectura básica',k:'read',instr:I_READ,text:LAURA,qs:LAURA_Q},{title:'Comprensión de lectura compleja',k:'read',instr:I_READ,text:PLANTS,qs:PLANTS_Q},{title:'Completar el texto · significado',k:'cloze',instr:I_CLOZE2,cloze:CLOZE_S}]
+};
+function partCount(p){return p.cloze?p.cloze.o.length:p.qs.length}
+function renderIngles(mode,start,icfes,parts){
+  const list=ENG[mode];let n=start,html='';
+  list.forEach((p,pi)=>{
+    const cnt=partCount(p),a=n,b=n+cnt-1;parts&&parts.push([pi+1,p.title,a,b]);
+    html+=`<hr class="prule"><p class="parte">PARTE ${pi+1} · ${p.title} — preguntas ${a} a ${b}</p><p class="pinstr">${p.instr}</p>`;
+    const m=META[p.k],info=icfes?'':`<p class="inf">➤ ${m[0]} // ${m[1]} // ${{Básico:'BB',Medio:'MM'}[m[2]]}</p>`;
+    if(p.k==='read')html+=`<p class="rtext">${p.text}</p><p class="cred">${CRED}</p>`;
+    if(p.cloze){
+      const t=p.cloze.text.replace(/\{(\d+)\}/g,(x,k)=>`<span class="gap">(${a+ +k-1})<u></u></span>`);
+      html+=`<p class="rtext">${t}</p><p class="cred">${CRED}</p>`;
+      p.cloze.o.forEach(o=>{html+=`<div class="q">${optsHTML({o},n,n)}${info}</div>`;n++});
+    }else p.qs.forEach(q=>{
+      let e=q.e;
+      if(p.k==='sign')e=`<span class="aviso">${q.e}</span>`;
+      if(p.k==='conv')e=`<span class="said">— ${q.e}</span>`;
+      html+=`<div class="q"><p><b>${n}.</b> ${p.k==='sign'?'':e}</p>${p.k==='sign'?e:''}${optsHTML(q,n)}${info}</div>`;n++;
+    });
+  });
+  return html;
+}
+
+/* ---------- estructuras ---------- */
+const S=(t,m,s,n,col,bank)=>({t,m,s,n,col,bank});
+const E1=[S('MATEMÁTICAS I',M1,'Matemáticas I',15,'mat','MAT'),S('MATEMÁTICAS II',M1,'Matemáticas II',15,'mat'),S('LENGUA CASTELLANA',LC,'Español',14,'len'),S('COMPRENSIÓN LECTORA',LC,'Comprensión Lectora',12,'len'),S('CIENCIAS SOCIALES','Ciencias Sociales','',20,'soc'),S('BIOLOGÍA',CN,'Biología',12,'nat'),S('FÍSICA',CN,'Física',12,'nat'),S('QUÍMICA',CN,'Química',12,'nat','QUI'),S('INGLÉS','Inglés','5 partes',28,'ing','ENG')];
+const E2=[S('MATEMÁTICAS I',M1,'Matemáticas I',13,'mat','MAT'),S('MATEMÁTICAS II',M1,'Matemáticas II',13,'mat'),S('LENGUA CASTELLANA',LC,'Español',14,'len'),S('COMPRENSIÓN LECTORA',LC,'Comprensión Lectora',10,'len'),S('CIENCIAS SOCIALES','Ciencias Sociales','',10,'soc'),S('FILOSOFÍA','Filosofía','',12,'fil'),S('CIENCIAS ECONÓMICAS Y POLÍTICAS','Ciencias Sociales','Ciencias Económicas y Políticas',10,'soc'),S('BIOLOGÍA',CN,'Biología',10,'nat'),S('FÍSICA',CN,'Física',10,'nat'),S('QUÍMICA',CN,'Química',10,'nat','QUI'),S('INGLÉS','Inglés','5 partes',28,'ing','ENG')];
+const P2=()=>[S('INFORMÁTICA','Informática','',16,'inf','INF'),S('EDUCACIÓN FÍSICA','Educación Física','',16,'edf','EDF'),S('EDUCACIÓN ARTÍSTICA','Educación Artística','',16,'art'),S('RELIGIÓN','Religión','',16,'rel'),S('ÉTICA','Ética','',16,'eti','ETI')];
+const E7=()=>P2().concat([S('DIBUJO','Dibujo','',12,'dib','DIB'),S('ELECTRICIDAD','Electricidad','',12,'ele'),S('MECÁNICA','Mecánica','',12,'mec')]);
+const E3X=()=>P2().concat([S('ELECTRICIDAD','Electricidad','',16,'ele','ELE')]);
+const E5=[S('MATEMÁTICAS',M1,'',25,'mat','MAT'),S('LECTURA CRÍTICA',LC,'Lectura Crítica',41,'len','LC'),S('SOCIALES Y CIUDADANAS','Ciencias Sociales · Filosofía','mezcladas',25,'soc'),S('CIENCIAS NATURALES',CN,'mezcladas',29,'nat','CN')];
+const E6=[S('MATEMÁTICAS',M1,'',25,'mat','MAT'),S('SOCIALES Y CIUDADANAS','Ciencias Sociales · Filosofía','mezcladas',25,'soc'),S('CIENCIAS NATURALES',CN,'mezcladas',29,'nat','CN'),S('INGLÉS','Inglés','7 partes',55,'ing','ENG')];
+
+const ses=(label,est,gg,mm,tt,secs,trans,extra)=>Object.assign({label,est,gg,mm,tt,secs,trans},extra||{});
+const TYPES=[
+ {id:'esp1',name:'Especial · una materia',sub:'Caso 1 · E4 · 1 sesión',grado:'7°',icfes:false,desc:'Día de las matemáticas',
+  sessions:[ses('Sesión única','E4 · libre','77','03','55',[S('MATEMÁTICAS',M1,'Matemáticas I',30,'mat','MAT')],null,{cont:true})],
+  rules:['Una sola sección, con su título impreso (MATEMÁTICAS).','Código de materia de la materia elegida (03 = Matemáticas completa).','Tipo 55 · Simulacro especial.','Línea ➤ impresa y Excel con la información que traiga cada ejercicio.'],
+  ask:[]},
+ {id:'espc',name:'Especial · combinado',sub:'Caso 1 · E4 · 1 sesión',grado:'9°',icfes:false,desc:'Día del idioma',
+  sessions:[ses('Sesión única','E4 · libre','99','97','55',[S('MATEMÁTICAS',M1,'Matemáticas I',25,'mat','MAT'),S('LENGUA CASTELLANA',LC,'Español',25,'len','ESP')],1)],
+  rules:['Varias secciones armadas a mano, en el orden deseado.','Código de materia 97 · Combinado especial (98 solo si es exactamente M-L-N-S-I).','La tabla de áreas se arma con las secciones reales.','Numeración continua de 1 a 50.'],
+  ask:[]},
+ {id:'p69',name:'Periódico · 6° a 9°',sub:'Caso 2 · E1 + E3 o E7',grado:'7°',icfes:false,desc:'Tercer periodo 2026',
+  sessions:[ses('Sesión 1 · PARTE 1','E1','77','91','33',E1,8),ses('Sesión 2 · PARTE 2','E3','77','92','33',P2(),1),ses('Sesión 2 · PARTE 3','E7','77','94','33',E7(),5),ses('Sesión 2 · PARTE 2 + materia','E3 + pedido especial','77','93','33',E3X(),5)],
+  rules:['Cada sesión es una cartilla con su código, su Word y su Excel.','La numeración y la plantilla reinician en 1 en cada sesión.','La sesión 2 (92, 93 o 94) se empareja sola con la sesión 1 (91) y excluye sus ejercicios.','PARTE 2 con una materia agregada por pedido especial: código 93; la materia nueva va al final.','Inglés en 5 partes indivisibles: 28 preguntas.'],
+  ask:[]},
+ {id:'p1011',name:'Periódico · 10° y 11°',sub:'Caso 2 · E2 + E3 o E7',grado:'11°',icfes:false,desc:'Tercer periodo 2026',
+  sessions:[ses('Sesión 1 · PARTE 1','E2','11','91','33',E2,10),ses('Sesión 2 · PARTE 2','E3','11','92','33',P2(),1),ses('Sesión 2 · PARTE 3','E7','11','94','33',E7(),5),ses('Sesión 2 · PARTE 2 + materia','E3 + pedido especial','11','93','33',E3X(),5)],
+  rules:['Once secciones: la tabla de áreas de la portada crece a 11 renglones.','Filosofía es materia propia (columna D = Filosofía).','Ciencias Económicas y Políticas es submateria de Ciencias Sociales.','Emparejamiento y numeración igual que en 6° a 9°.'],
+  ask:[]},
+ {id:'icfes',name:'Simulacro ICFES',sub:'Caso 3 · E5 + E6',grado:'Saber 11',icfes:true,desc:'Simulacro ICFES 2026',
+  sessions:[ses('Sesión 1 · tipo 71','E5','13','99','71',E5,1),ses('Sesión 2 · tipo 72','E6','13','99','72',E6,3)],
+  rules:['Siempre dos sesiones: 120 y 134 preguntas; cada una reinicia en 1.','No se imprime la línea ➤.','Excel: columnas F a J siempre vacías, aunque el ejercicio traiga la información; en MATEMÁTICAS también la E.','Solo entran ejercicios cargados con grado ICFES.','Filosofía entra mezclada con Ciencias Sociales en SOCIALES Y CIUDADANAS.','Inglés en 7 partes (6+6+7+9+9+9+9 = 55), todas con opciones A–D.'],
+  ask:[]}
+];
+const GLOBAL_ASK=[['Nombre del archivo','El nombre propuesto es «código - nombre descriptivo», editable. ¿Prefieren otro orden por defecto?']];
+const PAIR_NAMES=['grado','materia','tipo','plantilla','versión'];
+
+let st={t:0,s:0,e:null};let fnTouched=false;
+try{const v=JSON.parse(localStorage.getItem('praxis-prev2')||'null');if(v&&TYPES[v.t]){st.t=v.t;st.s=Math.min(v.s||0,TYPES[v.t].sessions.length-1)}}catch(e){}
+const $=id=>document.getElementById(id);
+const sumN=secs=>secs.reduce((a,s)=>a+s.n,0);
+function ranges(secs){let n=1;return secs.map(s=>{const r=[n,n+s.n-1];n+=s.n;return r})}
+const letterAt=pos=>PLANT[+$('plant').value-1][pos-1];
+const codeOf=se=>[se.gg,se.mm,se.tt,'0'+$('plant').value,'01'];
+const tiempoDe=(T,n)=>T.icfes?'4 horas y 30 minutos':tiempo(n);
+function tiempo(n){const m=n*2,h=Math.floor(m/60),r=m%60;const hs=h?`${h} hora${h>1?'s':''}`:'';const ms=r?`${r} minutos`:'';return hs&&ms?`${hs} y ${ms}`:(hs||ms)}
+const CV=document.createElement('canvas').getContext('2d');
+function wpt(txt,bold){CV.font=(bold?'bold ':'')+'90px Tahoma, Verdana, sans-serif';return CV.measureText(txt.replace(/<[^>]+>/g,'')).width*9/90}
+const COLPT=252;
+function layout(arr,inline){
+  const avail=COLPT-(inline?20:0);
+  return 'v';  /* decisión: opciones siempre verticales */
+}
+function optsHTML(q,pos,inlineNum){
+  const target='ABCD'.indexOf(letterAt(pos));
+  const arr=q.o.slice();[arr[0],arr[target]]=[arr[target],arr[0]];
+  const show=$('showkey').checked,mode=layout(arr,inlineNum);
+  const k=i=>show&&i===target?' key':'';
+  let html;
+  if(mode==='v')html=arr.map((o,i)=>`<p class="op${k(i)}"><b>${'ABCD'[i]}.</b> ${o}</p>`).join('');
+  else html=`<div class="orow ${mode}">${arr.map((o,i)=>`<span class="oc${k(i)}"><b>${'ABCD'[i]}.</b> ${o}</span>`).join('')}</div>`;
+  return inlineNum?`<div class="oline"><b>${inlineNum}.</b>${mode==='v'?'<div>'+html+'</div>':html}</div>`:html;
+}
+function infoLine(q,icfes){
+  if(icfes)return '';
+  const lv={Básico:'BB',Medio:'MM',Avanzado:'AA'}[q.n]||'';
+  const f=[q.p,q.c,q.d,lv].filter(Boolean);
+  return f.length?`<p class="inf">➤ ${f.join(' // ')}</p>`:'';
+}
+const qHTML=(q,num,icfes)=>`<div class="q"><p><b>${num}.</b> ${q.e}</p>${optsHTML(q,num)}${infoLine(q,icfes)}</div>`;
+function unitsFrom(bankKey,start,max,icfes,rows,limitEnd){
+  const bank=BANK[bankKey];let n=start,html='',i=0,guard=0;
+  while(n<start+max&&guard<40){guard++;
+    const u=bank[i%bank.length];i++;
+    if(limitEnd&&n>limitEnd)break;
+    if(u.blk){
+      const cnt=u.qs.length;if(limitEnd&&n+cnt-1>limitEnd)continue;
+      html+=`<p class="ref">Responde las preguntas ${n} a ${n+cnt-1} de acuerdo con la siguiente ${u.ref}.</p>${u.res}<p class="cred">${CRED}</p>`;
+      u.qs.forEach(q=>{html+=qHTML(q,n,icfes);rows&&rows.push([n,q]);n++});
+    }else{html+=qHTML(u,n,icfes);rows&&rows.push([n,u]);n++}
+  }
+  return html;
+}
+function footer(page){
+  const txt='PRAXIS – THINKS | Educación &amp; Práctica';
+  return page%2===0?`<div class="foot"><span>${txt}</span><span>${page}</span></div>`:`<div class="foot"><span>${page}</span><span>${txt}</span></div>`;
+}
+const cap=t=>t.toLowerCase().replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()).replace(/\bY\b/g,'y');
+function portada(T,se){
+  const secs=se.secs,total=sumN(secs),code=codeOf(se).join('');
+  const simLine=T.id.startsWith('p')?'Simulacro N° 1 | 3° Periodo':'Simulacro N° 1';
+  const rows=secs.map(s=>`<div class="arow" style="color:${COL[s.col]}"><span>${cap(s.t)}</span><span>${s.n}</span></div>`).join('');
+  const fs=secs.length>9?Math.max(1.55,2.25-(secs.length-9)*.2):2.25;
+  return `<div class="sheet">
+    <div class="pt">Simulacro de Preparación Estratégica</div>
+    <div class="pimg">Imagen de portada (configurable)</div>
+    <div class="prow"><div class="pill">${simLine}</div><div class="pill">Código Cartilla: ${code}</div></div>
+    <div class="pinfo">
+      <div>Grado<b>${T.grado}</b></div>
+      <div>Selección múltiple única respuesta</div>
+      <div><b>${total}</b>preguntas</div>
+      <div><span style="font-weight:700">Tiempo:</span>${tiempoDe(T,total)}</div>
+    </div>
+    <div class="pgrid">
+      <div class="pbox" style="font-size:${fs}cqw"><div class="phead"><span>Área</span><span>N. preguntas</span></div>${rows}</div>
+      <div class="pbox"><div class="phead" style="justify-content:center">Instrucciones</div><div class="inst">
+        <p><b>1.</b> Verifique que el código de la cartilla coincida con el de la hoja de respuestas.</p>
+        <p><b>2.</b> Lea cuidadosamente cada pregunta y sus opciones de respuesta.</p>
+        <p><b>3.</b> Seleccione únicamente la respuesta que considere correcta y rellene completamente el óvalo correspondiente.</p>
+        <p><b>4.</b> Administre adecuadamente su tiempo durante la prueba.</p>
+        <p><b>5.</b> No se permite el uso de celulares, relojes inteligentes, calculadoras, dispositivos electrónicos, libros ni cuadernos.</p></div></div>
+    </div>
+    <div class="ali">
+      <div class="logo"><div><b style="font-size:2.2cqw">PRAXIS - THINKS</b><br>Educación &amp; Práctica</div></div>
+      <div class="logo"><div>Juntos por la<br><b style="color:#D9822B">Excelencia Académica</b></div></div>
+      <div class="logo manual"><div>Logo de la institución<br>(se agrega a mano)</div></div>
+    </div>
+  </div>`;
+}
+function page1(T,se,rows){
+  const s0=se.secs[0],r=ranges(se.secs)[0];
+  const body=`<p class="st">${s0.t}</p>`+unitsFrom(s0.bank,1,12,T.icfes,rows,r[1]);
+  return `<div class="sheet"><div class="cols">${body}</div><p class="more">continúa…</p>${footer(2)}</div>`;
+}
+function page2(T,se){
+  const rg=ranges(se.secs);
+  if(se.cont){
+    return {title:'Página 3 · sigue la misma sección',html:`<div class="sheet"><div class="cols">${unitsFrom('MAT',11,12,T.icfes,null)}</div><p class="more">continúa…</p>${footer(3)}</div>`};
+  }
+  const b=se.trans,A=se.secs[b-1],B=se.secs[b],[,endA]=rg[b-1],[startB,endB]=rg[b];
+  const bankA=BANK[A.bank].filter(u=>!u.blk);
+  let body='';
+  [endA-1,endA].forEach((n,k)=>{body+=qHTML(bankA[k%bankA.length],n,T.icfes)});
+  body+=`<p class="st mid">${B.t}</p>`;
+  body+=B.bank==='ENG'?renderIngles(T.icfes?'icf':'per',startB,T.icfes):unitsFrom(B.bank,startB,11,T.icfes,null,endB);
+  const pg=2+Math.floor((startB-1)/9);
+  return {title:`Página ${pg} · de ${cap(A.t)} a ${cap(B.t)}`,html:`<div class="sheet"><div class="cols">${body}</div><p class="more">continúa…</p>${footer(pg)}</div>`};
+}
+function excel(T,se,rows,fileBase){
+  const code=codeOf(se).join('');const s0=se.secs[0];
+  const head=['Cartilla','Pregunta','Correcta','Materia','Submateria','Pensamiento','Competencia','DBA','Temática','Nivel','Justificación'];
+  let h=`<thead><tr>${'ABCDEFGHIJK'.split('').map(c=>`<th>${c}</th>`).join('')}</tr><tr>${head.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`;
+  rows.slice(0,10).forEach(([n,q])=>{
+    const ic=T.icfes;const sub=ic&&s0.t==='MATEMÁTICAS'?'':q.s;
+    const cell=v=>ic?'<td class="void"></td>':`<td>${v||''}</td>`;
+    h+=`<tr><td class="c">${code}</td><td class="k">${n}</td><td class="k">${letterAt(n)}</td><td>${q.m}</td>`+
+      (ic&&!sub?'<td class="void"></td>':`<td>${sub||''}</td>`)+cell(q.p)+cell(q.c)+cell(q.d)+cell(q.t)+cell(q.n)+`<td class="j">${q.j}</td></tr>`;
+  });
+  $('xl').innerHTML=h+'</tbody>';
+  $('xlnote').innerHTML=`Fila 1 con el título y la nota, fila 2 con los encabezados y una fila por pregunta desde la fila 3 (aquí las 10 primeras de ${sumN(se.secs)}).`+(T.icfes?' Las celdas rayadas van vacías por norma ICFES.':'');
+}
+const BAD=/[\\/:*?"<>|]/;
+function refreshFiles(){
+  const T=TYPES[st.t],se=T.sessions[st.s],code=codeOf(se).join('');
+  if(!fnTouched)$('fname').value=`${code} - ${$('desc').value.trim()}`.replace(/\s+-\s*$/,'');
+  const v=$('fname').value.trim();let err='';
+  if(!v)err='Escribe un nombre para el archivo.';else if(BAD.test(v))err='Quita estos caracteres: \\ / : * ? " < > |';
+  $('fnerr').textContent=err;$('fname').setAttribute('aria-invalid',err?'true':'false');
+  $('files').innerHTML=err?'<span style="color:var(--muted)">—</span>':`<span>${v}.docx</span><span>${v}.xlsx</span>`;
+  $('dlmsg').hidden=true;
+  return err?null:v;
+}
+function render(){
+  const T=TYPES[st.t],se=T.sessions[st.s];
+  if(!st.e)st.e=T.icfes?'icf':'per';
+  $('tabs').innerHTML=TYPES.map((t,i)=>`<button class="tab" role="tab" id="tab${i}" aria-selected="${i===st.t}" data-i="${i}">${t.name}<small>${t.sub}</small></button>`).join('');
+  $('sessions').innerHTML=T.sessions.map((s,i)=>`<button aria-pressed="${i===st.s}" data-s="${i}">${s.label}</button>`).join('');
+  const code=codeOf(se),total=sumN(se.secs);
+  const partner=T.sessions.length>1?T.sessions.filter(x=>x.label.split(' ·')[0]!==se.label.split(' ·')[0]).map(x=>codeOf(x).join('')):[];
+  $('summary').innerHTML=`
+    <div><dt>Código de la cartilla</dt><dd><div class="code">${code.map((c,i)=>`<span class="pair"><b>${c}</b><small>${PAIR_NAMES[i]}</small></span>`).join('')}</div></dd></div>
+    <div><dt>Estructura</dt><dd>${se.est} · ${se.secs.length} ${se.secs.length===1?'sección':'secciones'}</dd><dt style="margin-top:8px">Preguntas</dt><dd>${total} <span class="tag">cuadra</span></dd></div>
+    <div><dt>${T.icfes?'Tiempo (fijo en ICFES)':'Tiempo (2 min por pregunta)'}</dt><dd>${tiempoDe(T,total)}</dd><dt style="margin-top:8px">Impresión</dt><dd style="font-weight:400">Portada a color · cuerpo en blanco y negro</dd></div>
+    <div><dt>Línea ➤ y datos pedagógicos</dt><dd>${T.icfes?'<span class="tag no">No se imprimen</span>':'<span class="tag">Se imprimen</span>'}</dd>${partner.length?`<dt style="margin-top:8px">Se empareja con</dt><dd style="font-family:var(--mono);font-size:14px">${partner.join(' · ')}</dd>`:''}</div>`;
+  const rg=ranges(se.secs);
+  $('strip').innerHTML=se.secs.map(s=>`<div style="flex:${s.n};background:${COL[s.col]}" title="${s.t}"></div>`).join('');
+  $('legend').innerHTML=se.secs.map((s,i)=>`<span><i style="background:${COL[s.col]}"></i><em>${rg[i][0]}–${rg[i][1]}</em>${cap(s.t)} · ${s.n}${s.s==='mezcladas'?' · mezcladas':''}</span>`).join('');
+  const rows=[];const p1=page1(T,se,rows);const p2=page2(T,se);
+  $('sheets').className='sheets'+($('big').checked?' big':'')+($('guides').checked?' guides':'');
+  $('sheets').innerHTML=`
+    <div class="sheetbox"><h3><span>Página 1 · portada</span><span class="bw">a color · sin pie</span></h3>${portada(T,se)}</div>
+    <div class="sheetbox"><h3><span>Página 2 · inicio del cuerpo</span><span class="bw">blanco y negro · dos columnas</span></h3>${p1}</div>
+    <div class="sheetbox"><h3><span>${p2.title}</span><span class="bw">blanco y negro</span></h3>${p2.html}</div>`;
+  /* Inglés */
+  $('engmode').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.e===st.e));
+  const icfE=st.e==='icf',startE=icfE?80:113,parts=[];
+  $('eng').innerHTML=`<p class="st">INGLÉS</p>`+renderIngles(st.e,startE,icfE,parts);
+  $('engwrap').className='flowbox'+($('guides').checked?' guides':'');
+  $('partmap').innerHTML=parts.map(([n,t,a,b])=>`<span>Parte ${n} · ${t} · <b>${a}–${b}</b> · ${b-a+1}</span>`).join('')+`<span>Total · <b>${parts.reduce((x,p)=>x+p[3]-p[2]+1,0)}</b></span>`;
+  excel(T,se,rows);
+  $('rules').innerHTML=T.rules.map(r=>`<li>${r}</li>`).join('')+`<li>Plantilla ${$('plant').value}: la respuesta correcta de cada pregunta se mueve a la letra que marca la plantilla en esa posición.</li><li>Márgenes estrechos: 1,27 cm en los cuatro lados, sin encuadernación; columnas de 8,89 cm.</li>`;
+  $('ask').innerHTML=T.ask.concat(GLOBAL_ASK).map(([a,b])=>`<li><b>${a}</b>${b}</li>`).join('');
+  refreshFiles();
+  try{localStorage.setItem('praxis-prev2',JSON.stringify({t:st.t,s:st.s}))}catch(e){}
+}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;st={t:+b.dataset.i,s:0,e:null};$('desc').value=TYPES[st.t].desc;fnTouched=false;render();$('tab'+st.t).focus()});
+$('tabs').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;st={t:(st.t+(e.key==='ArrowRight'?1:TYPES.length-1))%TYPES.length,s:0,e:null};$('desc').value=TYPES[st.t].desc;fnTouched=false;render();$('tab'+st.t).focus()});
+$('sessions').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;st.s=+b.dataset.s;render()});
+$('engmode').addEventListener('click',e=>{const b=e.target.closest('[data-e]');if(!b)return;st.e=b.dataset.e;render()});
+['plant','showkey','big','guides'].forEach(id=>$(id).addEventListener('change',render));
+$('desc').addEventListener('input',refreshFiles);
+$('fname').addEventListener('input',()=>{fnTouched=true;refreshFiles()});
+$('dlbtn').addEventListener('click',()=>{const v=refreshFiles();if(!v){$('fname').focus();return}
+  const m=$('dlmsg');m.hidden=false;m.textContent=`En el sistema, este botón guarda «${v}.docx» y «${v}.xlsx» en la carpeta que elijas. Esta vista previa no descarga archivos.`});
+const FORMATS=[
+ ['Plantilla','Ejercicio suelto','PLANTILLA_CARGA_1_EJERCICIO_v1.1.docx','Una pregunta con sus cuatro opciones y las dos tablas.'],
+ ['Plantilla','Bloque de lectura','PLANTILLA_CARGA_2_BLOQUE_LECTURA_v1.1.docx','Una lectura o recurso con dos o más preguntas.'],
+ ['Plantilla','Parte de Inglés','PLANTILLA_CARGA_3_PARTE_INGLES_v1.1.docx','Una parte completa, con subtítulo e instrucción.'],
+ ['Ejemplo lleno','Ejercicio suelto','EJEMPLO_1_EJERCICIO_SUELTO.docx','Matemáticas I, 7°, con una tabla dentro del enunciado.'],
+ ['Ejemplo lleno','Bloque de lectura','EJEMPLO_2_BLOQUE_LECTURA.docx','Comprensión Lectora, 7°, tres preguntas y línea de crédito.'],
+ ['Ejemplo lleno','Parte de Inglés','EJEMPLO_3_PARTE_INGLES_COMPLETAR_TEXTO.docx','Completar el texto, con los marcadores (#1) a (#5).'],
+ ['Guía','Instructivo de normalización','INSTRUCTIVO_NORMALIZACION_v1.1','Todas las reglas y la lista de chequeo antes de subir.']];
+$('fmts').innerHTML=FORMATS.map(([k,t,f,d],i)=>`<div class="fmt"><span class="kind">${k}</span><b>${t}</b><small>${d}</small><small style="font-family:var(--mono);font-size:12px">${f}</small><button type="button" data-f="${i}">Descargar</button></div>`).join('');
+$('fmts').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;const m=$('fmsg');m.hidden=false;m.textContent=`En el sistema, este botón descarga «${FORMATS[+b.dataset.f][2]}». Esta vista previa no descarga archivos.`});
+$('drop').addEventListener('click',()=>{const m=$('fmsg');m.hidden=false;m.textContent='En el sistema, aquí se eligen los archivos y cada uno se valida contra el estándar. Abajo hay un ejemplo de resultado.'});
+$('desc').value=TYPES[st.t].desc;
+render();
+</script>

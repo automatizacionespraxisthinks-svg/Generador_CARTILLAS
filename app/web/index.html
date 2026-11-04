@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador de cartillas · PRAXIS – THINKS</title>
+<link rel="icon" href="/static/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/static/icono.png">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="barra">
+  <a class="marca" href="#panel" data-vista="panel">
+    <img src="/static/logo.png" alt="PRAXIS – THINKS · Educación &amp; Práctica" width="255" height="72">
+    <small>Generador de cartillas</small>
+  </a>
+  <nav aria-label="Secciones">
+    <a href="#panel" data-vista="panel">Panel</a>
+    <a href="#cargar" data-vista="cargar">Cargar ejercicios</a>
+    <a href="#banco" data-vista="banco">Banco</a>
+    <a href="#simulacros" data-vista="simulacros">Crear simulacro</a>
+    <a href="#formatos" data-vista="formatos">Formatos</a>
+    <a href="#catalogos" data-vista="catalogos">Catálogos</a>
+  </nav>
+</header>
+
+<main>
+  <!-- ============================================================ panel -->
+  <section id="v-panel" class="vista" hidden>
+    <div class="encabezado">
+      <h1>Panel</h1>
+      <p>Qué hay hoy en el banco y qué falta para armar cada cartilla. Todo se cuenta en el momento.</p>
+    </div>
+    <div id="panel-cargando" class="nota">Contando…</div>
+    <div id="panel" hidden></div>
+  </section>
+
+  <!-- ============================================================ cargar -->
+  <section id="v-cargar" class="vista">
+    <div class="encabezado">
+      <h1>Cargar ejercicios</h1>
+      <p>Sube uno o varios Word (.docx) hechos con las plantillas. Cada archivo se revisa contra el Estándar v1.2 y <b>queda en espera</b>: entra al banco cuando pulses «Guardar». Lo que no cumple se rechaza completo, con los motivos exactos y dónde corregirlos.</p>
+    </div>
+    <div id="pendientes"></div>
+    <label class="zona" id="zona" for="entrada">
+      <input type="file" id="entrada" accept=".docx" multiple hidden>
+      <span class="zona-titulo">Arrastra aquí tus archivos .docx</span>
+      <span class="zona-sub">o haz clic para elegirlos</span>
+    </label>
+    <div id="estado-carga" class="nota" role="status" aria-live="polite"></div>
+    <div id="resumen" class="resumen" hidden></div>
+    <div id="barra-guardar" class="bar-acciones" hidden>
+      <button type="button" class="boton" id="btn-guardar-todos">Guardar en el banco</button>
+      <button type="button" class="boton claro" id="btn-descartar-todos">Descartar los revisados</button>
+      <span class="nota" id="msg-guardar"></span>
+    </div>
+    <div id="resultados" class="resultados"></div>
+  </section>
+
+  <!-- ============================================================ banco -->
+  <section id="v-banco" class="vista" hidden>
+    <div class="encabezado">
+      <h1>Banco de ejercicios</h1>
+      <p id="banco-resumen">Cargando…</p>
+      <p class="nota">Haz una copia de seguridad después de cada sesión de carga y guárdala fuera del computador. <a class="enlace" href="/api/copia-seguridad">Descargar copia de seguridad</a></p>
+    </div>
+    <form id="filtros" class="filtros" aria-label="Filtros de búsqueda">
+      <label>Grado<select id="f-grado" name="grado"><option value="">Todos</option></select></label>
+      <label>Temática<select id="f-tematica" name="tematica"><option value="">Todas</option></select></label>
+      <label>Materia<select id="f-materia" name="materia"><option value="">Todas</option></select></label>
+      <label>Submateria<select id="f-submateria" name="submateria"><option value="">Todas</option></select></label>
+      <label>Nivel<select id="f-nivel" name="nivel"><option value="">Todos</option><option>Básico</option><option>Medio</option><option>Avanzado</option></select></label>
+      <label>Tipo<select id="f-tipo" name="tipo"><option value="">Todos</option><option value="suelto">Suelto</option><option value="bloque">Bloque de lectura</option><option value="parte">Parte de Inglés</option></select></label>
+      <label>Recurso<select id="f-recurso" name="recurso"><option value="">Cualquiera</option><option value="imagen">Con imagen</option><option value="tabla">Con tabla</option></select></label>
+      <label class="ancho">Buscar texto o código<input type="search" id="f-texto" name="texto" placeholder="ecuación, fotosíntesis, MA1-77…"></label>
+    </form>
+    <div class="banco">
+      <div>
+        <p id="banco-total" class="nota"></p>
+        <div id="banco-lista" class="lista"></div>
+      </div>
+      <aside id="detalle" class="detalle" aria-live="polite">
+        <p class="nota">Elige un ejercicio para ver cómo quedó.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================================ simulacros -->
+  <section id="v-simulacros" class="vista" hidden>
+    <div class="encabezado">
+      <h1>Crear simulacro</h1>
+      <p id="sim-estado">Cada sesión es una cartilla con su código, su Word y su Excel. Arma aquí las secciones y los ejercicios, revisa la vista previa y genera el Word y el Excel para descargarlos.</p>
+    </div>
+
+    <div id="sim-inicio">
+      <div class="bar-acciones">
+        <button type="button" class="boton" id="btn-nueva">Nueva cartilla</button>
+      </div>
+      <form id="form-nueva" class="panel-form" hidden>
+        <div class="filtros">
+          <label>Grado<select name="grado" id="n-grado"></select></label>
+          <label>Prueba<select name="estructura" id="n-estructura"></select></label>
+          <label>Tipo de material<select name="tipo_material" id="n-tipo"></select></label>
+          <label>Código de materia<select name="codigo_materia" id="n-materia"></select></label>
+          <label>Plantilla<select name="plantilla" id="n-plantilla"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label>Versión<input type="number" name="version" id="n-version" min="1" max="99" value="1"></label>
+          <label>Simulacro N°<input type="number" name="simulacro_n" min="1" max="99" value="1"></label>
+          <label>Dificultad<select name="dificultad" id="n-dificultad"></select></label>
+          <label class="ancho">Institución<input type="text" name="institucion" required placeholder="Institución Educativa…"></label>
+          <label class="ancho">Nombre descriptivo<input type="text" name="nombre" required placeholder="Tercer periodo 2026"></label>
+        </div>
+        <div class="bar-acciones">
+          <div class="codigo-vivo" id="n-codigo"></div>
+          <button type="submit" class="boton">Crear borrador</button>
+          <button type="button" class="boton claro" id="btn-cancelar">Cancelar</button>
+        </div>
+        <p class="err" id="n-error" role="alert"></p>
+      </form>
+      <div id="sim-lista" class="lista"></div>
+    </div>
+
+    <div id="sim-editor" hidden></div>
+  </section>
+
+  <!-- ============================================================ formatos -->
+  <section id="v-formatos" class="vista" hidden>
+    <div class="encabezado">
+      <h1>Formatos de carga</h1>
+      <p>Descarga la plantilla del tipo de pregunta, llénala siguiendo el ejemplo del mismo tipo y revísala con la lista de chequeo del instructivo antes de subirla.</p>
+    </div>
+    <div id="formatos"></div>
+  </section>
+
+  <!-- ============================================================ catálogos -->
+  <section id="v-catalogos" class="vista" hidden>
+    <div class="encabezado">
+      <h1>Catálogos</h1>
+      <p>Valores de fábrica del Estándar v1.2. Forman el código de la cartilla y las reglas del validador.</p>
+    </div>
+    <div id="catalogos"></div>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

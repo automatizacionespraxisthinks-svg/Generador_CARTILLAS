@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+sqlalchemy
+python-docx
+lxml
+openpyxl
+pillow
+pywin32; sys_platform == "win32"
+markdown
+pytest
+httpx

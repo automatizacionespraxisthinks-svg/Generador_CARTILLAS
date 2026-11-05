@@ -1,0 +1,19 @@
+# Alternativa a la opción «Application» de Dokploy (o para probar en local: docker compose up --build)
+services:
+  praxis:
+    build: .
+    restart: unless-stopped
+    environment:
+      # Usuario y clave para entrar. Defínelos en Dokploy (pestaña Environment); si se dejan vacíos, no pide clave.
+      PRAXIS_USUARIO: ${PRAXIS_USUARIO:-}
+      PRAXIS_CLAVE: ${PRAXIS_CLAVE:-}
+    volumes:
+      - praxis_datos:/data
+    expose:
+      - "8000"
+    # Solo para probar en tu equipo; en Dokploy el dominio se asigna desde la pestaña Domains
+    # ports:
+    #   - "8000:8000"
+
+volumes:
+  praxis_datos:

@@ -1,0 +1,24 @@
+# Lo que NO entra en la imagen
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.claude
+datos
+lote_prueba
+docs/muestra_generada
+docs/verificacion_maquetacion
+tests
+scripts
+*.bat
+iniciar.py
+*.tmp
+Thumbs.db
+desktop.ini
+~$*
+docker-compose.yml
+Dockerfile
+.dockerignore

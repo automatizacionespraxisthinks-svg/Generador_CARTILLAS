@@ -1,4 +1,7 @@
 """Servidor del Generador de cartillas PRAXIS – THINKS."""
+import base64
+import os
+import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import quote
@@ -109,6 +112,34 @@ def api_guardar_pendientes(cuerpo: dict = Body(...)):
     """Guarda en el banco los archivos en espera que se marcaron."""
     ids = [int(x) for x in (cuerpo.get("ids") or [])]
     return banco.guardar_pendientes(ids, cuerpo.get("decisiones") or {})
+
+
+@app.get("/salud")
+def salud():
+    """Para el healthcheck del contenedor: responde sin tocar la base ni pedir clave."""
+    return {"ok": True}
+
+
+# Clave de acceso para el servidor. En el equipo local no se define y todo sigue igual.
+_USUARIO = os.environ.get("PRAXIS_USUARIO", "")
+_CLAVE = os.environ.get("PRAXIS_CLAVE", "")
+
+
+@app.middleware("http")
+async def con_clave(request, call_next):
+    """Si PRAXIS_USUARIO y PRAXIS_CLAVE están definidas, pide usuario y clave (HTTP Basic) en todo menos /salud."""
+    if not (_USUARIO and _CLAVE) or request.url.path == "/salud":
+        return await call_next(request)
+    cabecera = request.headers.get("authorization", "")
+    if cabecera.lower().startswith("basic "):
+        try:
+            usuario, _, clave = base64.b64decode(cabecera[6:]).decode("utf-8").partition(":")
+        except (ValueError, UnicodeDecodeError):
+            usuario = clave = ""
+        if secrets.compare_digest(usuario.encode(), _USUARIO.encode()) and secrets.compare_digest(clave.encode(), _CLAVE.encode()):
+            return await call_next(request)
+    return Response("Se necesita usuario y clave.", status_code=401,
+                    headers={"WWW-Authenticate": 'Basic realm="Generador PRAXIS", charset="UTF-8"'})
 
 
 @app.middleware("http")

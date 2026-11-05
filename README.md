@@ -32,3 +32,15 @@ La base de datos se crea sola en `datos/praxis.db` con los catálogos de fábric
 | `plantillas/` | Plantilla base de la cartilla, plantillas de carga v1.2, ejemplos llenos, instructivo en Word, el Excel de códigos y las 5 plantillas de respuestas |
 | `scripts/` | Generadores de plantillas y ejemplos, prototipo de maquetación en Word |
 | `tests/` | Pruebas: `.venv\Scripts\python -m pytest tests` |
+
+## Servidor (Docker / Dokploy)
+
+El repositorio trae `Dockerfile`, `.dockerignore` y `docker-compose.yml`. En el servidor:
+
+- La base queda en el volumen **`/data`** (`/data/praxis.db`). Sin volumen, cada redespliegue la borra.
+- Variables: `PRAXIS_USUARIO` y `PRAXIS_CLAVE` piden usuario y clave al entrar (si se dejan vacías, la página queda abierta a cualquiera con el enlace). `PORT` (8000 por defecto).
+- En Linux no hay Microsoft Word, así que **no se cuentan las páginas ni se reordena con Word** (ajuste a múltiplo de 4 y maquetación). La cartilla y el Excel se generan igual; el conteo de páginas se hace en el equipo local con Word.
+- `GET /salud` responde sin clave, para el healthcheck.
+- Copia de seguridad: botón de la pantalla (`/api/copia-seguridad`) o el volumen de Dokploy.
+
+Probar en local: `docker compose up --build` (descomentar `ports` en `docker-compose.yml`) y abrir `http://localhost:8000`.

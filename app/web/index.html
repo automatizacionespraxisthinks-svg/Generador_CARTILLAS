@@ -77,6 +77,12 @@
     <div class="banco">
       <div>
         <p id="banco-total" class="nota"></p>
+        <div class="lote" id="lote" hidden>
+          <label class="lote-todos"><input type="checkbox" id="marcar-todos"> Marcar los de la lista</label>
+          <span class="nota" id="lote-cuenta">Ninguno marcado.</span>
+          <button type="button" class="boton peligro" id="btn-borrar-marcados" disabled>Eliminar marcados</button>
+          <button type="button" class="boton peligro hueco" id="btn-borrar-filtro" hidden></button>
+        </div>
         <div id="banco-lista" class="lista"></div>
       </div>
       <aside id="detalle" class="detalle" aria-live="polite">

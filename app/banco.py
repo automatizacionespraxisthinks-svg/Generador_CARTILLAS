@@ -227,27 +227,36 @@ def opciones_filtro(grado=None):
                 "competencias": col("competencia"), "pensamientos": col("pensamiento")}
 
 
+def _con_filtros(q, f):
+    """Los filtros de la pantalla del banco, sobre una consulta de Ejercicio ya unida a Bloque.
+
+    Está aparte porque los mismos filtros se usan para buscar y para eliminar en lote: así lo que se
+    borra es exactamente lo que se ve, sin dos consultas que puedan separarse con el tiempo.
+    """
+    for campo in ("grado", "tematica", "materia", "submateria", "nivel", "competencia", "pensamiento"):
+        if f.get(campo):
+            q = q.where(getattr(Ejercicio, campo) == f[campo])
+    if f.get("dba"):
+        q = q.where(Ejercicio.dba.contains(f["dba"]))
+    if f.get("tipo") == "suelto":
+        q = q.where(Ejercicio.bloque_id.is_(None))
+    elif f.get("tipo") in ("bloque", "parte"):
+        q = q.where(Bloque.tipo == f["tipo"])
+    if f.get("recurso") == "imagen":
+        q = q.where(Ejercicio.tiene_imagen.is_(True))
+    elif f.get("recurso") == "tabla":
+        q = q.where(Ejercicio.tiene_tabla.is_(True))
+    if f.get("max_usos") not in (None, ""):
+        q = q.where(Ejercicio.veces_usado <= int(f["max_usos"]))
+    if f.get("texto"):
+        for palabra in f["texto"].split():
+            q = q.where(or_(Ejercicio.texto.ilike(f"%{palabra}%"), Ejercicio.codigo.ilike(f"%{palabra}%")))
+    return q
+
+
 def buscar(f):
     with Sesion() as s:
-        q = select(Ejercicio, Bloque).outerjoin(Bloque, Ejercicio.bloque_id == Bloque.id)
-        for campo in ("grado", "tematica", "materia", "submateria", "nivel", "competencia", "pensamiento"):
-            if f.get(campo):
-                q = q.where(getattr(Ejercicio, campo) == f[campo])
-        if f.get("dba"):
-            q = q.where(Ejercicio.dba.contains(f["dba"]))
-        if f.get("tipo") == "suelto":
-            q = q.where(Ejercicio.bloque_id.is_(None))
-        elif f.get("tipo") in ("bloque", "parte"):
-            q = q.where(Bloque.tipo == f["tipo"])
-        if f.get("recurso") == "imagen":
-            q = q.where(Ejercicio.tiene_imagen.is_(True))
-        elif f.get("recurso") == "tabla":
-            q = q.where(Ejercicio.tiene_tabla.is_(True))
-        if f.get("max_usos") not in (None, ""):
-            q = q.where(Ejercicio.veces_usado <= int(f["max_usos"]))
-        if f.get("texto"):
-            for palabra in f["texto"].split():
-                q = q.where(or_(Ejercicio.texto.ilike(f"%{palabra}%"), Ejercicio.codigo.ilike(f"%{palabra}%")))
+        q = _con_filtros(select(Ejercicio, Bloque).outerjoin(Bloque, Ejercicio.bloque_id == Bloque.id), f)
         total = s.scalar(select(func.count()).select_from(q.subquery()))
         filas = s.execute(q.order_by(Ejercicio.id.desc()).limit(200)).all()
         return {"total": total, "items": [{
@@ -366,37 +375,108 @@ def detalle(eid):
     }
 
 
-def eliminar(eid):
-    """Elimina el ejercicio; si pertenece a un bloque o parte, elimina la unidad completa.
+def _por_trozos(valores, tam=400):
+    """SQLite no admite listas enormes en un IN(...): se pregunta por tandas."""
+    valores = list(valores)
+    for i in range(0, len(valores), tam):
+        yield valores[i:i + tam]
 
-    Si alguna cartilla lo estaba usando, también se le quita de ahí y se renumeran sus preguntas: dejar
+
+def eliminar(eid):
+    """Elimina el ejercicio; si pertenece a un bloque o parte, elimina la unidad completa."""
+    with Sesion() as s:
+        if s.get(Ejercicio, eid) is None:
+            return None
+    r = eliminar_varios([eid])
+    return {"eliminados": r["eliminados"], "usos": r["usos"], "cartillas": r["cartillas"]}
+
+
+def eliminar_varios(ids=None, filtro=None, solo_ver=False):
+    """Elimina del banco varios ejercicios de una vez, o todos los que coincidan con unos filtros.
+
+    Cada ejercicio marcado **arrastra su unidad completa**: un bloque de lectura o una parte de Inglés
+    entran y salen enteros, porque media lectura no sirve para nada.
+
+    Si alguna cartilla los estaba usando, también se les quita de ahí y se renumeran sus preguntas: dejar
     la referencia colgando rompía la cartilla entera al generarla. Las cartillas ya generadas pierden sus
     archivos, porque el Word guardado deja de corresponder a lo que tienen.
+
+    `ids`: los que marcó la persona. `filtro`: los mismos filtros de la pantalla, para borrar todo lo que
+    coincide aunque la lista solo muestre los primeros 200. Con `solo_ver` no borra nada: solo cuenta lo
+    que se iría, para poder avisarlo antes de preguntar.
     """
     with Sesion() as s:
-        e = s.get(Ejercicio, eid)
-        if e is None:
-            return None
-        grupo = s.scalars(select(Ejercicio).where(Ejercicio.archivo_id == e.archivo_id)).all()
-        codigos = [x.codigo for x in grupo]
-        usos = sum(x.veces_usado for x in grupo)
-        tocadas = _sacar_de_las_cartillas(s, [x.id for x in grupo])
+        # los id pueden llegar como texto desde la pantalla: se comparan con los de la base, así que van a número
+        marcados = set()
+        for i in ids or []:
+            try:
+                marcados.add(int(i))
+            except (TypeError, ValueError):
+                continue
+        if filtro:
+            consulta = _con_filtros(
+                select(Ejercicio.id).select_from(Ejercicio).outerjoin(Bloque, Ejercicio.bloque_id == Bloque.id),
+                filtro)
+            marcados |= set(s.scalars(consulta))
+        vacio = {"eliminados": [], "unidades": 0, "usos": 0, "cartillas": [], "arrastrados": 0, "marcados": 0}
+        if not marcados:
+            return vacio
+
+        archivos = set()
+        for trozo in _por_trozos(sorted(marcados)):
+            archivos |= set(s.scalars(select(Ejercicio.archivo_id).where(Ejercicio.id.in_(trozo))))
+        if not archivos:
+            return vacio
+        grupo = []
+        for trozo in _por_trozos(sorted(archivos)):
+            grupo += list(s.scalars(select(Ejercicio).where(Ejercicio.archivo_id.in_(trozo))))
+
+        todos = [x.id for x in grupo]
+        resumen_lote = {
+            "eliminados": sorted(x.codigo for x in grupo),
+            "unidades": len(archivos),
+            "usos": sum(x.veces_usado for x in grupo),
+            "arrastrados": len(grupo) - len(marcados & set(todos)),   # los que entran por ser del mismo bloque
+            "marcados": len(marcados),
+        }
+        if solo_ver:
+            return {**resumen_lote, "cartillas": _cartillas_que_usan(s, todos)}
+
+        resumen_lote["cartillas"] = _sacar_de_las_cartillas(s, todos)
         for x in grupo:
             s.delete(x)
-        if e.bloque_id:
-            s.delete(s.get(Bloque, e.bloque_id))
-        arch = s.get(Archivo, e.archivo_id)
-        datos_arch = arch.datos
+        for bid in {x.bloque_id for x in grupo if x.bloque_id}:
+            b = s.get(Bloque, bid)
+            if b is not None:
+                s.delete(b)
         s.flush()
-        s.delete(arch)
+        for aid in archivos:
+            a = s.get(Archivo, aid)
+            if a is not None:
+                s.delete(a)
         s.commit()
-        analisis.olvidar(datos_arch)
-    return {"eliminados": codigos, "usos": usos, "cartillas": tocadas}
+    analisis.olvidar()          # el lote puede ser enorme: se vacía la memoria de archivos leídos entera
+    return resumen_lote
+
+
+def _cartillas_que_usan(s, ids):
+    """Las cartillas que tienen alguna de esas preguntas, sin tocar nada."""
+    afectadas = set()
+    for trozo in _por_trozos(ids):
+        afectadas |= set(s.scalars(select(CartillaItem.cartilla_id).where(CartillaItem.ejercicio_id.in_(trozo))))
+    salida = []
+    for cid in sorted(afectadas):
+        c = s.get(Cartilla, cid)
+        if c is not None:
+            salida.append({"codigo": c.codigo, "nombre": c.nombre, "estado": c.estado})
+    return salida
 
 
 def _sacar_de_las_cartillas(s, ids):
     """Quita esas preguntas de las cartillas que las usen y deja las posiciones seguidas otra vez."""
-    items = list(s.scalars(select(CartillaItem).where(CartillaItem.ejercicio_id.in_(ids))))
+    items = []
+    for trozo in _por_trozos(ids):
+        items += list(s.scalars(select(CartillaItem).where(CartillaItem.ejercicio_id.in_(trozo))))
     if not items:
         return []
     afectadas, tocadas = {i.cartilla_id for i in items}, []

@@ -93,8 +93,9 @@ async function guardarRevisados(ids) {
 /* el banco cambió: que las demás pantallas vuelvan a pedir sus datos */
 function refrescarDatos() {
   OPC = null;
-  bancoListo = false;
   panelCargado = false;
+  // bancoListo NO se toca: solo marca que los escuchadores de la pantalla ya están puestos, y
+  // volver a ponerlos haría que cada filtro buscara dos veces. Los datos se recargan igual en abrirBanco.
   if (CART) api("/api/cartillas/" + CART.id).then(c => { CART = c; if (!$("#v-simulacros").hidden) pintarEditor(); }).catch(() => {});
 }
 
@@ -219,6 +220,13 @@ async function abrirBanco() {
     $("#filtros").addEventListener("change", e => { if (e.target.id === "f-grado") llenarOpciones(); buscar(); });
     $("#f-texto").addEventListener("input", () => { clearTimeout(temporizador); temporizador = setTimeout(buscar, 300); });
     $("#filtros").addEventListener("submit", e => e.preventDefault());
+    $("#banco-lista").addEventListener("change", e => { if (e.target.classList.contains("marca")) contarMarcados(); });
+    $("#marcar-todos").addEventListener("change", e => {
+      marcas().forEach(c => { c.checked = e.target.checked; });
+      contarMarcados();
+    });
+    $("#btn-borrar-marcados").addEventListener("click", () => borrarLote({ids: marcados()}, marcados().length > 20));
+    $("#btn-borrar-filtro").addEventListener("click", () => borrarLote({filtro: filtrosActuales()}, true));
     bancoListo = true;
   }
   await llenarOpciones();
@@ -239,18 +247,28 @@ async function buscar() {
   const res = await api("/api/banco?" + params);
   $("#banco-total").textContent = res.total ? `${res.total} resultado${res.total > 1 ? "s" : ""}${res.total > res.items.length ? ` (se muestran ${res.items.length})` : ""}` : "Ningún ejercicio coincide con los filtros.";
   $("#banco-lista").innerHTML = res.items.map(x => `
-    <button type="button" class="item" data-id="${x.id}">
-      <span class="item-cod mono">${esc(x.codigo)}</span>
-      <span class="item-meta">${esc(GRADO[x.grado])} · ${esc(x.submateria || x.materia)} · ${esc(x.tematica)}${x.nivel ? " · " + esc(x.nivel) : ""}</span>
-      <span class="item-texto">${esc(x.texto)}</span>
-      <span class="item-tags">${x.bloque ? `<span>${x.tipo === "parte" ? "Parte" : "Bloque"} ${esc(x.bloque)} · pregunta ${x.orden}</span>` : ""}${x.imagen ? "<span>Imagen</span>" : ""}${x.tabla ? "<span>Tabla</span>" : ""}${x.glosario ? "<span>Glosario</span>" : ""}<span>Usado ${x.veces_usado}</span></span>
-    </button>`).join("");
+    <div class="item" data-id="${x.id}">
+      <label class="item-marca" title="Marcar ${esc(x.codigo)} para eliminarlo">
+        <input type="checkbox" class="marca" value="${x.id}" aria-label="Marcar ${esc(x.codigo)} para eliminarlo">
+      </label>
+      <button type="button" class="item-ver" data-id="${x.id}">
+        <span class="item-cod mono">${esc(x.codigo)}</span>
+        <span class="item-meta">${esc(GRADO[x.grado])} · ${esc(x.submateria || x.materia)} · ${esc(x.tematica)}${x.nivel ? " · " + esc(x.nivel) : ""}</span>
+        <span class="item-texto">${esc(x.texto)}</span>
+        <span class="item-tags">${x.bloque ? `<span>${x.tipo === "parte" ? "Parte" : "Bloque"} ${esc(x.bloque)} · pregunta ${x.orden}</span>` : ""}${x.imagen ? "<span>Imagen</span>" : ""}${x.tabla ? "<span>Tabla</span>" : ""}${x.glosario ? "<span>Glosario</span>" : ""}<span>Usado ${x.veces_usado}</span></span>
+      </button>
+    </div>`).join("");
+  TOTAL_FILTRO = res.total;
+  VISIBLES = res.items.length;
+  $("#lote").hidden = !res.total;
+  $("#marcar-todos").checked = false;
+  contarMarcados();
 }
 
 $("#banco-lista").addEventListener("click", async e => {
-  const b = e.target.closest(".item");
+  const b = e.target.closest(".item-ver");
   if (!b) return;
-  document.querySelectorAll(".item").forEach(x => x.classList.toggle("activo", x === b));
+  document.querySelectorAll("#banco-lista .item").forEach(x => x.classList.toggle("activo", x.contains(b)));
   const d = await api("/api/banco/" + b.dataset.id);
   $("#detalle").innerHTML = `
     <div class="det-cab"><b class="mono">${esc(d.codigo)}</b>${d.bloque ? ` <span class="nota">· ${d.tipo === "parte" ? "parte" : "bloque"} ${esc(d.bloque)} con ${d.hermanos} preguntas</span>` : ""}</div>
@@ -265,6 +283,69 @@ $("#banco-lista").addEventListener("click", async e => {
     </dl>
     <div class="det-botones"><a class="boton" href="/api/banco/${d.id}/original">Descargar Word original</a><button type="button" class="boton peligro" data-eliminar="${d.id}">Eliminar</button></div>`;
 });
+
+/* ---------------------------------------------------------------- eliminar en lote */
+let TOTAL_FILTRO = 0, VISIBLES = 0;
+
+const marcas = () => [...document.querySelectorAll("#banco-lista .marca")];
+const marcados = () => marcas().filter(c => c.checked).map(c => Number(c.value));
+
+function contarMarcados() {
+  const n = marcados().length;
+  marcas().forEach(c => c.closest(".item").classList.toggle("marcado", c.checked));
+  $("#lote-cuenta").textContent = n
+    ? `${n} marcado${n > 1 ? "s" : ""} de ${VISIBLES} en la lista.`
+    : "Ninguno marcado. Usa las casillas para elegir cuáles eliminar.";
+  $("#btn-borrar-marcados").disabled = !n;
+  $("#btn-borrar-marcados").textContent = n > 1 ? `Eliminar los ${n} marcados` : "Eliminar marcado";
+  // borrar todo lo que coincide solo tiene sentido si hay más de lo que cabe en la lista
+  const filtro = $("#btn-borrar-filtro");
+  filtro.hidden = TOTAL_FILTRO <= VISIBLES;
+  filtro.textContent = `Eliminar los ${TOTAL_FILTRO} del filtro`;
+}
+
+function filtrosActuales() {
+  const f = {};
+  new FormData($("#filtros")).forEach((v, k) => { if (v) f[k] = v; });
+  return f;
+}
+
+/** Lo que se va a borrar, contado por el servidor, en palabras. */
+function resumenBorrado(p) {
+  const n = p.eliminados.length;
+  const partes = [`Se eliminará${n > 1 ? "n" : ""} ${n} pregunta${n > 1 ? "s" : ""} del banco`
+    + (p.unidades !== n ? ` (${p.unidades} archivo${p.unidades > 1 ? "s" : ""} de carga)` : "") + "."];
+  if (p.arrastrados) partes.push(`${p.arrastrados} entra${p.arrastrados > 1 ? "n" : ""} porque pertenece${p.arrastrados > 1 ? "n" : ""} a un bloque de lectura o a una parte de Inglés que no se puede partir.`);
+  if (p.cartillas.length) {
+    partes.push(`Atención: ${p.cartillas.length} cartilla${p.cartillas.length > 1 ? "s las usan" : " las usa"} y se les quitarán esas preguntas, renumerando las demás:`);
+    partes.push(p.cartillas.map(c => `   · ${c.codigo} ${c.nombre || ""}${c.estado === "generada" ? " (ya generada: pierde su Word y su Excel)" : ""}`).join("\n"));
+  } else if (p.usos) {
+    partes.push(`Se han usado ${p.usos} ve${p.usos > 1 ? "ces" : "z"} en cartillas anteriores.`);
+  }
+  partes.push("\nEsto no se puede deshacer. Haz primero una copia de seguridad si no estás seguro.");
+  return partes.join("\n");
+}
+
+async function borrarLote(cuerpo, pedirPalabra) {
+  let previo;
+  try {
+    previo = await api("/api/banco/eliminar", {method: "POST", headers: {"Content-Type": "application/json"},
+                                               body: JSON.stringify({...cuerpo, solo_ver: true})});
+  } catch (err) { alert("No se pudo consultar qué se eliminaría: " + err.message); return; }
+  if (!previo.eliminados.length) { alert("No hay nada que eliminar."); return; }
+  if (!confirm(resumenBorrado(previo) + "\n\n¿Eliminar?")) return;
+  if (pedirPalabra && (prompt(`Son ${previo.eliminados.length} preguntas. Escribe BORRAR para confirmar:`) || "").trim().toUpperCase() !== "BORRAR") {
+    alert("No se eliminó nada.");
+    return;
+  }
+  try {
+    const r = await api("/api/banco/eliminar", {method: "POST", headers: {"Content-Type": "application/json"},
+                                                body: JSON.stringify(cuerpo)});
+    $("#detalle").innerHTML = `<p class="nota">Se eliminaron ${r.eliminados.length} pregunta(s) del banco.${r.cartillas.length ? ` Se actualizaron ${r.cartillas.length} cartilla(s).` : ""}</p>`;
+    refrescarDatos();
+    abrirBanco();
+  } catch (err) { alert("No se pudo eliminar: " + err.message); }
+}
 
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-eliminar]");

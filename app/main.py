@@ -216,6 +216,15 @@ def api_banco_original(eid: int):
                         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(a.nombre)}"})
 
 
+@app.post("/api/banco/eliminar")
+def api_banco_eliminar_varios(cuerpo: dict = Body(...)):
+    """Elimina en lote: los ejercicios marcados, o todos los que coincidan con los filtros de la pantalla.
+
+    Con `solo_ver` no borra: devuelve lo que se iría, para poder avisarlo antes de preguntar.
+    """
+    return banco.eliminar_varios(cuerpo.get("ids"), cuerpo.get("filtro"), solo_ver=bool(cuerpo.get("solo_ver")))
+
+
 @app.delete("/api/banco/{eid}")
 def api_banco_eliminar(eid: int):
     r = banco.eliminar(eid)

@@ -1022,9 +1022,13 @@ def _leer_cartilla_generada(datos):
     for p in doc.paragraphs:
         t = p.text.strip()
         # «9. A. went»: en «completar el texto» el número va en la misma línea que la opción A
-        junto = re.match(r"^(\d+)\.\s+([A-D])\.\s", t)
-        numero = re.match(r"^(\d+)\.\s", t)
-        opcion = re.match(r"^([A-D])\.\s", t)
+        #
+        # Tras el punto puede no venir NADA: cuando la opción es una imagen (¿cuál rectángulo está
+        # sombreado?), el párrafo dice solo «A.» y la figura va al lado. Exigir un espacio dejaba esas
+        # preguntas sin opciones y la verificación impedía generar la cartilla entera.
+        junto = re.match(r"^(\d+)\.\s+([A-D])\.(?:\s|$)", t)
+        numero = re.match(r"^(\d+)\.(?:\s|$)", t)
+        opcion = re.match(r"^([A-D])\.(?:\s|$)", t)
         if junto:
             actual = {"numero": int(junto.group(1)), "opciones": [junto.group(2)]}
             preguntas.append(actual)

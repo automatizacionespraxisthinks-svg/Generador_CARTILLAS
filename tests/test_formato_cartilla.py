@@ -580,3 +580,27 @@ def test_que_se_queda_pegado_dentro_del_enunciado(items, esperado):
 
     enunciado = [Trozo(x) for x in items]
     assert [_pegar_al_siguiente(enunciado, j) for j in range(len(items))] == esperado
+
+
+def test_la_verificacion_lee_las_opciones_que_son_imagenes():
+    """«¿Cuál de estos rectángulos…?»: la opción es una figura y el párrafo dice solo «A.».
+
+    Exigir un espacio tras el punto dejaba esas preguntas sin opciones, y la verificación cruzada
+    impedía generar la cartilla entera aunque el Word estuviera bien.
+    """
+    import io
+
+    from docx import Document
+
+    from app.generador import _leer_cartilla_generada
+
+    doc = Document()
+    for texto in ("12. ¿En cuál rectángulo está sombreada esa fracción?", "A.", "B.", "C.", "D.",
+                  "13. Pregunta normal", "A. uno", "B. dos", "C. tres", "D. cuatro"):
+        doc.add_paragraph(texto)
+    buf = io.BytesIO()
+    doc.save(buf)
+
+    leidas = _leer_cartilla_generada(buf.getvalue())
+    assert [(q["numero"], q["opciones"]) for q in leidas] == [
+        (12, ["A", "B", "C", "D"]), (13, ["A", "B", "C", "D"])]

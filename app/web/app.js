@@ -486,14 +486,79 @@ async function simulacros() {
   $("#sim-editor").hidden = true;
   $("#sim-inicio").hidden = false;
   const lista = await api("/api/cartillas");
+  CARTILLAS = lista;
   $("#sim-lista").innerHTML = lista.length ? lista.map(x => `
-    <div class="cartilla"><div><b>${esc(x.codigo)}</b> · ${esc(x.nombre)}<br><small class="nota">${esc(x.institucion)} · ${esc(x.estructura)} · ${GRADO[x.grado]} · creada el ${esc(x.creada)}</small></div>
+    <div class="cartilla">
+      ${x.estado === "generada"
+        ? `<label class="cuad-marca" title="Incluir ${esc(x.codigo)} en un cuadernillo de varias sesiones"><input type="checkbox" class="cuad" value="${x.id}"></label>`
+        : `<span class="cuad-marca"></span>`}
+      <div class="cartilla-info"><b>${esc(x.codigo)}</b> · ${esc(x.nombre)}<br><small class="nota">${esc(x.institucion)} · ${esc(x.estructura)} · ${GRADO[x.grado]} · creada el ${esc(x.creada)}</small></div>
       <div class="avance" title="${x.elegidos} de ${x.total}"><span style="width:${x.total ? Math.round(100 * x.elegidos / x.total) : 0}%"></span></div>
       <div class="acciones"><span class="nota">${x.elegidos} de ${x.total}</span>
         <button type="button" class="mini" data-abrir="${x.id}">Abrir</button>
         <button type="button" class="mini quitar" data-borrar="${x.id}" data-codigo="${esc(x.codigo)}"
                 data-generada="${x.estado === "generada" ? 1 : 0}">Eliminar</button></div></div>`).join("")
     : `<p class="nota">No hay cartillas todavía. Crea la primera con «Nueva cartilla».</p>`;
+  ELEGIDAS = ELEGIDAS.filter(id => lista.some(x => x.id === id && x.estado === "generada"));
+  pintarCuadernillo();
+}
+
+
+/* ---------------------------------------------------------------- cuadernillo de varias sesiones */
+let CARTILLAS = [], ELEGIDAS = [];      // ELEGIDAS guarda el ORDEN en que se marcaron: son las sesiones
+
+function pintarCuadernillo() {
+  document.querySelectorAll("#sim-lista .cuad").forEach(c => { c.checked = ELEGIDAS.includes(Number(c.value)); });
+  const panel = $("#cuadernillo");
+  panel.hidden = CARTILLAS.filter(x => x.estado === "generada").length < 2;
+  if (panel.hidden) return;
+  const sesiones = ELEGIDAS.map(id => CARTILLAS.find(x => x.id === id)).filter(Boolean);
+  $("#cuad-orden").innerHTML = sesiones.length
+    ? sesiones.map((x, i) => `<li><b>${esc(x.codigo)}</b> · ${esc(x.nombre)} · ${x.elegidos} preguntas
+        <span class="nota">${i === 0 ? "portada entera" : "media portada, abre en hoja derecha"}</span></li>`).join("")
+    : `<li class="nota">Ninguna marcada todavía.</li>`;
+  const listo = sesiones.length >= 2;
+  $("#btn-cuadernillo").disabled = !listo;
+  $("#cuad-aviso").textContent = listo
+    ? `${sesiones.length} sesiones · ${sesiones.reduce((n, x) => n + x.elegidos, 0)} preguntas en total.`
+    : "Marca al menos dos cartillas generadas, del mismo grado.";
+}
+
+document.addEventListener("change", e => {
+  if (!e.target.classList.contains("cuad")) return;
+  const id = Number(e.target.value);
+  ELEGIDAS = e.target.checked ? [...ELEGIDAS.filter(x => x !== id), id] : ELEGIDAS.filter(x => x !== id);
+  pintarCuadernillo();
+});
+
+async function descargarCuadernillo() {
+  const boton = $("#btn-cuadernillo"), aviso = $("#cuad-aviso");
+  boton.disabled = true;
+  aviso.textContent = "Armando el cuadernillo y comprobándolo con Word…";
+  try {
+    const r = await fetch("/api/cuadernillo/generar", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({cartillas: ELEGIDAS, nombre: $("#cuad-nombre").value.trim() || null})});
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      aviso.textContent = d.detail || "No se pudo armar el cuadernillo.";
+      return;
+    }
+    const nombre = decodeURIComponent((r.headers.get("content-disposition") || "").split("''")[1] || "cuadernillo.docx");
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement("a"), {href: url, download: nombre});
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    const paginas = r.headers.get("X-Praxis-Paginas"), faltan = r.headers.get("X-Praxis-Faltan");
+    aviso.textContent = `Descargado: ${nombre}.` + (paginas
+      ? ` ${paginas} páginas${faltan && faltan !== "0" ? `, faltan ${faltan} para el múltiplo de 4.` : ", múltiplo de 4."}`
+      : " No se pudieron contar las páginas (Word no estaba disponible).");
+  } catch (err) {
+    aviso.textContent = "No se pudo armar el cuadernillo: " + err.message;
+  } finally {
+    boton.disabled = ELEGIDAS.length < 2;
+  }
 }
 
 function estructurasDeGrado() {
@@ -518,6 +583,7 @@ function codigoVivo() {
 
 $("#btn-nueva").addEventListener("click", () => { $("#form-nueva").hidden = false; codigoVivo(); });
 $("#btn-cancelar").addEventListener("click", () => { $("#form-nueva").hidden = true; $("#n-error").textContent = ""; });
+$("#btn-cuadernillo").addEventListener("click", descargarCuadernillo);
 $("#form-nueva").addEventListener("submit", async e => {
   e.preventDefault();
   const datos = Object.fromEntries(new FormData(e.target));

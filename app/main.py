@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app import armado, banco, estadisticas, generador, maqueta, prompt
+from app import armado, banco, cuadernillo, estadisticas, generador, maqueta, prompt
 from app.bd import (Agrupacion, Archivo, CargaPendiente, Ejercicio, Estructura, ExcepcionSuperindice, FraseProhibida, Grado,
                     Materia, Plantilla, Sesion, TipoMaterial)
 from app.config import PLANTILLAS, WEB
@@ -407,6 +407,33 @@ def api_cartilla_paginas(cid: int):
     if r is None:
         raise HTTPException(404, "Cartilla no encontrada")
     return {**r, "cartilla": armado.detalle(cid)}
+
+
+@app.post("/api/cuadernillo")
+def api_cuadernillo_previo(cuerpo: dict = Body(...)):
+    """Qué llevaría el cuadernillo de varias sesiones, sin armarlo."""
+    try:
+        return cuadernillo.previo([int(x) for x in cuerpo.get("cartillas") or []])
+    except (TypeError, ValueError):
+        raise HTTPException(400, "La lista de cartillas no es válida.")
+    except generador.ErrorGeneracion as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/api/cuadernillo/generar")
+def api_cuadernillo_generar(cuerpo: dict = Body(...)):
+    """Arma el Word con todas las sesiones y lo devuelve para descargar. No cambia las cartillas."""
+    try:
+        r = cuadernillo.generar([int(x) for x in cuerpo.get("cartillas") or []], cuerpo.get("nombre"))
+    except (TypeError, ValueError):
+        raise HTTPException(400, "La lista de cartillas no es válida.")
+    except generador.ErrorGeneracion as e:
+        raise HTTPException(400, str(e))
+    return Response(r["datos"], media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(r['nombre'])}",
+                             # el conteo necesita Word: sin él van vacías, y 0 es un dato, no un vacío
+                             "X-Praxis-Paginas": "" if r["paginas"] is None else str(r["paginas"]),
+                             "X-Praxis-Faltan": "" if r["faltan_paginas"] is None else str(r["faltan_paginas"])})
 
 
 @app.get("/api/cartillas/{cid}/archivos")

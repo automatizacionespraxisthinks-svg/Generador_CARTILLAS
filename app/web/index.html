@@ -123,6 +123,19 @@
         <p class="err" id="n-error" role="alert"></p>
       </form>
       <div id="sim-lista" class="lista"></div>
+
+      <div id="cuadernillo" class="panel-cuad" hidden>
+        <h2>Imprimir varias sesiones en un solo cuadernillo</h2>
+        <p class="nota">Marca arriba las cartillas generadas que se aplican el mismo día, en el orden de las
+          sesiones. La primera lleva la portada entera; las demás abren en hoja derecha con media portada y
+          su propio código, y vuelven a numerar desde 1. Cada sesión conserva su Excel de claves.</p>
+        <ol id="cuad-orden" class="cuad-orden"></ol>
+        <div class="bar-acciones">
+          <label class="ancho">Nombre del archivo<input type="text" id="cuad-nombre" placeholder="Cuadernillo 6° — dos sesiones"></label>
+          <button type="button" class="boton" id="btn-cuadernillo">Descargar cuadernillo</button>
+        </div>
+        <p class="nota" id="cuad-aviso" role="status" aria-live="polite"></p>
+      </div>
     </div>
 
     <div id="sim-editor" hidden></div>

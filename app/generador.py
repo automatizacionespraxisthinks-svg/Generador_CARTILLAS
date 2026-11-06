@@ -596,21 +596,37 @@ def titulo_de_portada(s, c):
     return "Simulacro de preparación estratégica"
 
 
-def _armar_portada_media(doc, s, c, total):
+def _armar_portada_media(doc, s, c, total, elementos=None):
+    """`elementos`: media portada ya copiada dentro de otro documento (cuadernillo de dos sesiones).
+
+    Sin ella se recorre el documento entero, que es el caso de una cartilla suelta.
+    """
     cambios = _texto_portada_media(s, c, total)
-    for p in doc.element.body.iter(W + "p"):
-        t = texto_de(p).strip()
-        if t in cambios:
-            poner_texto(p, cambios[t])
+    donde = elementos if elementos is not None else [doc.element.body]
+    for raiz in donde:
+        for p in raiz.iter(W + "p"):          # iter() incluye al propio elemento si ya es un párrafo
+            t = texto_de(p).strip()
+            if t in cambios:
+                poner_texto(p, cambios[t])
 
 
-def ilustracion_portada(doc):
-    """El dibujo más grande de la portada: es la ilustración del tema, la única que se puede cambiar."""
-    marca = next((p for p in doc.element.body.iter(W + "p") if MARCA_CUERPO in texto_de(p)), None)
+def ilustracion_portada(doc, elementos=None):
+    """El dibujo más grande de la portada: es la ilustración del tema, la única que se puede cambiar.
+
+    `elementos`: una media portada ya copiada dentro de otro documento (cuadernillo de dos sesiones);
+    sin ella se mira desde el principio del documento hasta la marca del cuerpo.
+    """
+    if elementos is not None:
+        parrafos = [p for raiz in elementos for p in raiz.iter(W + "p")]
+    else:
+        marca = next((p for p in doc.element.body.iter(W + "p") if MARCA_CUERPO in texto_de(p)), None)
+        parrafos = []
+        for p in doc.element.body.iter(W + "p"):
+            if p is marca:
+                break
+            parrafos.append(p)
     mayor, area = None, 0
-    for p in doc.element.body.iter(W + "p"):
-        if p is marca:
-            break
+    for p in parrafos:
         for ext in p.iter("{%s}extent" % NS["wp"]):
             tam = int(ext.get("cx", 0)) * int(ext.get("cy", 0))
             if tam > area:
@@ -621,14 +637,67 @@ def ilustracion_portada(doc):
     return mayor
 
 
-def cambiar_ilustracion(doc, datos):
+def cambiar_ilustracion(doc, datos, elementos=None):
     """Pone la imagen de la cartilla en lugar de la ilustración que trae la plantilla."""
-    blip = ilustracion_portada(doc)
+    blip = ilustracion_portada(doc, elementos)
     if blip is None or not datos:
         return False
     nuevo, _ = doc.part.get_or_add_image(io.BytesIO(datos))
     blip.set(R + "embed", nuevo)
     return True
+
+
+MC = "{http://schemas.openxmlformats.org/markup-compatibility/2006}"
+
+
+def solo_dibujo_moderno(el):
+    """Deja solo la versión DrawingML de cada forma y quita el respaldo VML de Word 2007.
+
+    El respaldo repite la forma en otro formato y apunta a relaciones del documento de origen; al
+    copiarla a otro documento esas relaciones no existen y Word da el archivo por dañado.
+    """
+    for alt in list(el.iter(MC + "AlternateContent")):
+        choice = alt.find(MC + "Choice")
+        if choice is None:
+            continue
+        padre = alt.getparent()
+        sitio = list(padre).index(alt)
+        for hijo in list(choice):
+            padre.insert(sitio, hijo)
+            sitio += 1
+        padre.remove(alt)
+    return el
+
+
+def traer_imagenes(el, origen, destino):
+    """Copia al documento destino las imágenes que use el fragmento y reapunta sus referencias."""
+    hechas = {}
+    for blip in el.iter("{%s}blip" % NS["a"]):
+        rid = blip.get(R + "embed")
+        if not rid:
+            continue
+        if rid not in hechas:
+            parte = origen.part.related_parts.get(rid)
+            if parte is None:
+                continue
+            nuevo, _ = destino.part.get_or_add_image(io.BytesIO(parte.blob))
+            hechas[rid] = nuevo
+        blip.set(R + "embed", hechas[rid])
+    for imagedata in el.iter("{urn:schemas-microsoft-com:vml}imagedata"):
+        rid = imagedata.get(R + "id")
+        if rid and rid in hechas:
+            imagedata.set(R + "id", hechas[rid])
+    return el
+
+
+def elementos_de_portada(doc):
+    """Los elementos de la portada de una plantilla: todo lo que va antes de la marca del cuerpo."""
+    salida = []
+    for el in doc.element.body:
+        if MARCA_CUERPO in texto_de(el):
+            return salida
+        salida.append(el)
+    raise ErrorGeneracion(f"La plantilla no tiene la marca {MARCA_CUERPO}.")
 
 
 def _configurar_pagina(doc, media=False):
@@ -756,8 +825,15 @@ def _numerar_espacios(el, primera):
             t.set(qn("xml:space"), "preserve")
 
 
-def _armar_cuerpo(doc, s, c, cop, orden=None, piezas=None):
-    marca = next((p for p in doc.element.body.iter(W + "p") if MARCA_CUERPO in texto_de(p)), None)
+def _armar_cuerpo(doc, s, c, cop, orden=None, piezas=None, ancla=None):
+    """`ancla`: dónde se insertan las preguntas. Sin ella se usa la marca de la plantilla y se retira.
+
+    El cuadernillo de dos sesiones pasa su propia ancla, porque el cuerpo de la segunda sesión no va en
+    la marca de la plantilla sino detrás de su media portada.
+    """
+    # «ancla or …» no sirve: un elemento de lxml sin hijos es falso, y el ancla es un párrafo vacío
+    marca = ancla if ancla is not None else next(
+        (p for p in doc.element.body.iter(W + "p") if MARCA_CUERPO in texto_de(p)), None)
     if marca is None:
         raise ErrorGeneracion(f"La plantilla de la cartilla no tiene la marca {MARCA_CUERPO}.")
     num = posiciones(c, orden)
@@ -900,7 +976,8 @@ def _armar_cuerpo(doc, s, c, cop, orden=None, piezas=None):
             _separar(antes, "after")
     for el in salida:
         marca.addprevious(el)
-    marca.getparent().remove(marca)
+    if ancla is None:
+        marca.getparent().remove(marca)      # el ancla prestada no es nuestra: se deja donde está
     return sorted(claves, key=lambda x: x["posicion"]), glosarios
 
 

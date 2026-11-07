@@ -512,19 +512,30 @@ let CARTILLAS = [], ELEGIDAS = [];      // ELEGIDAS guarda el ORDEN en que se ma
 
 function pintarCuadernillo() {
   document.querySelectorAll("#sim-lista .cuad").forEach(c => { c.checked = ELEGIDAS.includes(Number(c.value)); });
-  const panel = $("#cuadernillo");
-  panel.hidden = CARTILLAS.filter(x => x.estado === "generada").length < 2;
-  if (panel.hidden) return;
+  // el panel se ve SIEMPRE: si se escondiera hasta tener dos cartillas generadas, nadie sabría que existe
+  const generadas = CARTILLAS.filter(x => x.estado === "generada");
   const sesiones = ELEGIDAS.map(id => CARTILLAS.find(x => x.id === id)).filter(Boolean);
+  const falta = generadas.length < 2;
+  $("#cuadernillo").hidden = false;
+  $("#cuad-controles").hidden = falta;
+  $("#cuad-orden").hidden = falta;
   $("#cuad-orden").innerHTML = sesiones.length
     ? sesiones.map((x, i) => `<li><b>${esc(x.codigo)}</b> · ${esc(x.nombre)} · ${x.elegidos} preguntas
         <span class="nota">${i === 0 ? "portada entera" : "media portada, abre en hoja derecha"}</span></li>`).join("")
     : `<li class="nota">Ninguna marcada todavía.</li>`;
   const listo = sesiones.length >= 2;
   $("#btn-cuadernillo").disabled = !listo;
-  $("#cuad-aviso").textContent = listo
-    ? `${sesiones.length} sesiones · ${sesiones.reduce((n, x) => n + x.elegidos, 0)} preguntas en total.`
-    : "Marca al menos dos cartillas generadas, del mismo grado.";
+  $("#cuad-aviso").textContent = falta
+    ? (CARTILLAS.length === 0
+        ? "Aún no hay cartillas. Crea cada sesión por separado con «Nueva cartilla», genera su Word, y aquí podrás juntarlas."
+        : generadas.length === 0
+          ? (CARTILLAS.length === 1
+              ? "Tienes una cartilla en borrador. Genera su Word, y el de otra sesión, para poder juntarlas."
+              : `Tienes ${CARTILLAS.length} cartillas en borrador. Genera el Word de al menos dos para poder juntarlas.`)
+          : "Tienes una cartilla generada. Hace falta al menos otra, del mismo grado.")
+    : listo
+      ? `${sesiones.length} sesiones · ${sesiones.reduce((n, x) => n + x.elegidos, 0)} preguntas en total.`
+      : "Marca al menos dos cartillas generadas, del mismo grado.";
 }
 
 document.addEventListener("change", e => {

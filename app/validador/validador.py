@@ -23,6 +23,16 @@ ENC_GLOSARIO = ["Pregunta", "Término", "Significado"]
 MAX_TERMINOS = 3            # por pregunta
 MAX_LARGO_TERMINO = 40
 MAX_LARGO_SIGNIFICADO = 150
+
+# --- lo que el archivo de carga tiene que cumplir, en los nombres que entiende quien lo prepara.
+# Están aquí, y no sueltos por el código, porque el prompt del panel los lee de aquí: así no se desfasan.
+FUENTE = "Tahoma"
+TAM_TEXTO = 9               # pt del enunciado y de las opciones
+TAM_CHICO = 8               # pt dentro de las tablas, en la línea de crédito y en el pie de una imagen
+MARGEN_CM = 1.27            # «Márgenes › Estrecho» en Word
+MAX_COLUMNAS_TABLA = 4
+MAX_ANCHO_CM = 8.4          # ancho de una columna de la cartilla: imágenes y tablas no lo pasan
+PPP_MINIMO = 300
 ROTULOS = ("TABLA DE RESPUESTAS", "TABLA DE EXCEL", "TABLA DE GLOSARIO")
 NOMBRE_ALINEACION = {"left": "a la izquierda", "center": "centrado", "right": "a la derecha"}
 FRASES_REFERENCIA = {

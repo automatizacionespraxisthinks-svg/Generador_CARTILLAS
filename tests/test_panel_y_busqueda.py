@@ -813,3 +813,35 @@ def test_no_se_puede_dar_la_vuelta_a_un_bloque(c):
         ids = {e.codigo: e.id for e in s.scalars(select(Ejercicio).where(Ejercicio.codigo.in_(codigos)))}
     with _pytest.raises(ErrorArmado, match="orden"):
         reordenar(d["id"], sec["id"], [ids[cod] for cod in reversed(codigos)])
+
+
+def test_el_prompt_trae_la_ficha_tecnica_que_exige_el_validador(c):
+    """La auditoría del 07/11/2026 encontró que el prompt callaba lo que más rechazos produce.
+
+    Decía «una sola fuente» cuando el validador exige Tahoma, «un solo tamaño» cuando exige 9 pt y 8 pt
+    en tablas, y no nombraba los límites de tabla ni los requisitos de las imágenes.
+    """
+    import re
+
+    from app.validador.validador import (FUENTE, MARGEN_CM, MAX_ANCHO_CM, MAX_COLUMNAS_TABLA,
+                                         PPP_MINIMO, TAM_CHICO, TAM_TEXTO)
+
+    t = re.sub(r"\s+", " ", c.get("/api/prompt").json()["texto"])
+    assert "ficha técnica del archivo" in t
+    assert FUENTE in t, "el prompt no nombra la fuente que exige el validador"
+    for valor in (f"{TAM_TEXTO} pt", f"{TAM_CHICO} pt", f"{MAX_COLUMNAS_TABLA} columnas", f"{PPP_MINIMO} ppp"):
+        assert valor in t, f"el prompt no dice «{valor}»"
+    assert f"{MARGEN_CM:g}".replace(".", ",") + " cm" in t
+    assert f"{MAX_ANCHO_CM:g}".replace(".", ",") + " cm" in t
+    assert "letra y el punto en negrita" in t          # la regla 5 que nadie adivina
+    assert "Una sola" in t and "dos columnas" in t     # el archivo de carga va a una columna
+    assert "no puede quedar nada" in t                 # nada entre las tablas de control ni después
+
+
+def test_el_prompt_explica_completar_el_texto(c):
+    """Las partes de Inglés tipo «cloze» tienen dos reglas propias que el validador exige."""
+    import re
+
+    t = re.sub(r"\s+", " ", c.get("/api/prompt").json()["texto"])
+    assert "(#1), (#2)" in t and "van sin enunciado" in t
+    assert "DBA 3, DBA 5" in t                         # varios DBA, con el formato que acepta el validador

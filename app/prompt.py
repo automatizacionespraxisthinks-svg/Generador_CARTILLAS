@@ -11,7 +11,9 @@ from sqlalchemy import distinct, select
 
 from app import catalogos_base as base
 from app.bd import Ejercicio, Materia, Sesion
-from app.validador.validador import ENC_EXCEL, ENC_GLOSARIO, ENC_RESPUESTAS
+from app.validador.validador import (ENC_EXCEL, ENC_GLOSARIO, ENC_RESPUESTAS, FUENTE, MARGEN_CM,
+                                     MAX_ANCHO_CM, MAX_COLUMNAS_TABLA, PPP_MINIMO, TAM_CHICO,
+                                     TAM_TEXTO)
 
 MAXIMO_EJEMPLOS = 8          # pensamientos o competencias que se listan por materia
 
@@ -70,7 +72,10 @@ def texto():
         dba_ingles=chr(10).join("  - " + x for x in base.DBA_INGLES_6),
         enc_respuestas=" | ".join(ENC_RESPUESTAS),
         enc_excel=" | ".join(ENC_EXCEL),
-        enc_glosario=" | ".join(ENC_GLOSARIO))
+        enc_glosario=" | ".join(ENC_GLOSARIO),
+        pagina="21,59 × 27,94 cm", margen=f"{MARGEN_CM:g}".replace(".", ","),
+        fuente=FUENTE, tam_texto=TAM_TEXTO, tam_chico=TAM_CHICO,
+        max_col=MAX_COLUMNAS_TABLA, max_ancho=f"{MAX_ANCHO_CM:g}".replace(".", ","), ppp=PPP_MINIMO)
 
 
 PLANTILLA = """Eres un asistente que prepara ejercicios para el sistema de cartillas de PRAXIS – THINKS.
@@ -144,7 +149,17 @@ Hay tres formas de ejercicio. Usa la que corresponda:
 **C. Parte de Inglés** (un conjunto con título propio):
 
     PARTE #P · [Título de la parte] — preguntas #N a #M
-    (igual que el bloque de lectura; deja «#P», «#N» y «#M» tal cual)
+    [La instrucción de la parte, en un solo párrafo.]
+    [El recurso: la lectura, el diálogo o el texto con espacios.]
+    [Crédito del recurso. OBLIGATORIO, igual que en el bloque de lectura.]
+    (luego las preguntas y, al final, las tres tablas)
+
+    Deja «#P», «#N» y «#M» tal cual: los números los pone el sistema.
+
+    **Si la parte es de «completar el texto»**, hay dos reglas más:
+    - los espacios del texto se marcan **(#1), (#2), (#3)…**, uno por pregunta, en orden y dentro del
+      recurso, nunca fuera;
+    - esas preguntas **van sin enunciado**: debajo del texto va solo la letra con su opción.
 
 ══════════════════════════════════════════════════════════════════════
 2. REGLAS QUE EL VALIDADOR NO PERDONA
@@ -174,15 +189,27 @@ Hay tres formas de ejercicio. Usa la que corresponda:
 13. El crédito del recurso es **obligatorio** en los bloques de lectura y en las partes de Inglés, y
     **está prohibido** en un ejercicio suelto. Va en el último párrafo del recurso, en cursiva y alineado
     a la derecha.
-14. Una sola fuente en todo el archivo y un solo tamaño de letra. **Sin viñetas ni numeración automática**
-    de Word: si hay que numerar algo, escribe el número a mano.
+14. **Sin viñetas ni numeración automática** de Word: si hay que numerar algo, escribe el número a mano.
 15. Nada de comentarios, notas para el autor, «TODO», ni control de cambios.
 16. Las fórmulas van con el **editor de ecuaciones de Word** o con superíndices y subíndices de verdad
     (ver el punto 3, que es donde se explica con detalle). Nada de objetos incrustados ni de capturas.
-17. Las imágenes van **solas en su párrafo**, centradas, en línea con el texto y de 8,4 cm como máximo.
-    La única excepción son las opciones que son figuras: ahí la imagen va detrás de su letra, en el mismo
-    párrafo. Sin tablas dentro de otras tablas.
-18. Página carta (21,59 × 27,94 cm), vertical.
+17. Las imágenes van **solas en su párrafo**, centradas y en línea con el texto. La única excepción son
+    las opciones que son figuras: ahí la imagen va detrás de su letra, en el mismo párrafo.
+18. Las tablas de control van **al final y en este orden**: RESPUESTAS, EXCEL y GLOSARIO. Entre ellas y
+    después de la última **no puede quedar nada**: ni un párrafo suelto, ni una nota, ni un espacio.
+
+**La ficha técnica del archivo** (es lo que más rechazos produce, y no se adivina)
+
+| Qué | Cómo tiene que estar |
+|---|---|
+| Página | Carta, {pagina}, **vertical** |
+| Márgenes | **{margen} cm** por los cuatro lados: en Word, Márgenes › Estrecho |
+| Columnas | **Una sola**. El documento de carga nunca va a dos columnas; eso lo hace la cartilla |
+| Fuente | **{fuente}** en todo el archivo, sin excepción |
+| Tamaño | **{tam_texto} pt** en el enunciado y las opciones · **{tam_chico} pt** dentro de las tablas, en la línea de crédito y en el pie de una imagen |
+| La letra de la opción | «A. » con la **letra y el punto en negrita**, y el resto de la opción normal |
+| Tablas del contenido | Máximo **{max_col} columnas** y **{max_ancho} cm** de ancho · encabezado en negrita · todas las celdas centradas verticalmente · marcada «No dividir la fila entre páginas» · sin tablas anidadas · sin tablas dentro de las opciones |
+| Imágenes | **PNG**, mínimo **{ppp} ppp** al tamaño en que se ven, máximo **{max_ancho} cm** de ancho, fondo blanco **sin transparencia**, en línea con el texto · sin bordes, sombras ni efectos de Word · sin cuadros de texto: los rótulos van dentro del PNG |
 
 ══════════════════════════════════════════════════════════════════════
 3. LAS MATEMÁTICAS SE ESCRIBEN CON EL EDITOR DE ECUACIONES
@@ -314,9 +341,9 @@ solo lleva «Ciencias Económicas y Políticas» lo que trate de economía, merc
 políticos. Marcarlo todo como Económicas y Políticas deja sin ejercicios la sección de Ciencias Sociales
 de esos grados y la cartilla no se puede armar.
 
-**DBA**: toma el número de la **malla del grado** y escríbelo como «DBA 4». Si la malla da varios DBA para el
-mismo tema, elige el que corresponde al contenido de esa pregunta. Si no lo sabes con certeza, déjalo vacío:
-es preferible vacío a equivocado.
+**DBA**: toma el número de la **malla del grado** y escríbelo como «DBA 4»; si de verdad son varios,
+sepáralos con coma: «DBA 3, DBA 5». Si la malla da varios para el mismo tema, elige el que corresponde al
+contenido de esa pregunta. Si no lo sabes con certeza, déjalo vacío: es preferible vacío a equivocado.
 
 Los DBA de **Inglés de 6°** (MEN) son estos:
 {dba_ingles}

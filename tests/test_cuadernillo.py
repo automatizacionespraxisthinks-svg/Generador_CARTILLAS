@@ -213,3 +213,21 @@ def test_sin_el_excel_guardado_avisa_en_vez_de_entregar_a_medias(c, dos):
         with Sesion() as s:
             s.add(CartillaArchivo(cartilla_id=idb, tipo="xlsx", nombre=guardado[0], datos=guardado[1]))
             s.commit()
+
+
+def test_todas_las_sesiones_llevan_la_linea_entre_columnas(c, dos):
+    """La sesión 1 salía sin la raya del medio: al crear su sección se perdía «w:sep» de la plantilla."""
+    (ida, _), (idb, _) = dos
+    r = c.post("/api/cuadernillo/generar", json={"cartillas": [ida, idb]})
+    doc = Document(io.BytesIO(abrir_zip(r.content)[1]))
+    dos_columnas = [cols for sect in doc.element.body.iter(W + "sectPr")
+                    for cols in sect.findall(W + "cols") if cols.get(W + "num") == "2"]
+    assert len(dos_columnas) >= 2, "deben quedar al menos dos secciones a dos columnas, una por sesión"
+    for cols in dos_columnas:
+        assert cols.get(W + "sep") == "1", f"una sesión quedó sin la línea del medio: {dict(cols.attrib)}"
+        assert cols.get(W + "space"), "sin separación entre columnas"
+
+    # y la media portada va a una sola columna, sin línea
+    una = [cols for sect in doc.element.body.iter(W + "sectPr")
+           for cols in sect.findall(W + "cols") if cols.get(W + "num") == "1"]
+    assert una and all(c.get(W + "sep") is None for c in una), "la media portada no lleva línea del medio"

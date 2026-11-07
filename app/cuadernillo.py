@@ -56,12 +56,19 @@ def _corte(sectpr_modelo, tipo, columnas):
     márgenes sin repetir aquí esos números.
     """
     sect = copy.deepcopy(sectpr_modelo)
-    for viejo in sect.findall(W + "cols"):
-        sect.remove(viejo)
-    cols = _el("w:cols", **{"w:num": str(columnas)})
+    # se RETOCA el bloque de columnas de la plantilla, no se rehace: traía «w:sep», que es la línea
+    # vertical entre las dos columnas. Rehacerlo la perdía, y la sesión 1 salía sin esa línea.
+    cols = sect.find(W + "cols")
+    if cols is None:
+        cols = _el("w:cols")
+        sect.append(cols)
+    cols.set(W + "num", str(columnas))
     if columnas > 1:
         cols.set(W + "space", str(generador.ESPACIO_COLUMNAS))
-    sect.append(cols)
+        cols.set(W + "sep", "1")
+    else:
+        for sobra in (W + "space", W + "sep"):
+            cols.attrib.pop(sobra, None)
     _poner_tipo(sect, tipo)
     p = _el("w:p")
     ppr = _el("w:pPr")

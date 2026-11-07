@@ -46,6 +46,9 @@ ESPACIO_COLUMNAS = 454          # 0,8 cm entre columnas: cada columna mide 9,12 
 MARGEN_INFERIOR = 880           # twips (1,55 cm): 720 de margen + la holgura del pie (ver _configurar_pagina)
 MARGEN_CELDA_VERTICAL = 20     # 1 pt arriba y abajo del texto de cada celda
 ESPACIO_FIGURA = 6              # pt de aire arriba y abajo de cada imagen y de cada tabla
+# tamaño al que se IMPRIME una ecuación: el mismo del texto que la rodea (ver _ecuacion_al_tamano)
+TAM_ECUACION = 9                # cuerpo de la cartilla
+TAM_ECUACION_CHICA = 8          # tablas y glosario
 ESPACIO_TRAS_TABLA = ESPACIO_FIGURA * 20      # lo mismo, en twips, para el párrafo que rodea a la tabla
 FIN_PREGUNTA = 14               # pt después de la última línea de cada pregunta (unos 5 mm hasta la siguiente)
 COL_LETRA = 0.45                # cm que ocupa «A.» antes del texto de la opción
@@ -367,14 +370,55 @@ def run_texto(texto, size=9, bold=False, italic=False, vert=None):
 M = "{http://schemas.openxmlformats.org/officeDocument/2006/math}"
 
 
-def _ecuacion_pequena(ecuacion, size=8):
-    """La ecuación del glosario, al tamaño de esa línea (8 pt, no los 9 del enunciado).
+ESCALA_FRACCION = 0.73      # Cambria Math imprime al 73 % lo que va arriba y abajo de la barra
 
-    Cada trozo de la ecuación es un «m:r» que puede traer o no sus propiedades de texto; si no las trae,
-    se le ponen, porque si no heredaría el tamaño por defecto del documento y se vería más grande que el
-    resto del glosario.
+
+def _en_fraccion(r):
+    """¿Este trozo va dentro del numerador o del denominador de alguna fracción?"""
+    x = r.getparent()
+    while x is not None:
+        if x.tag in (M + "num", M + "den"):
+            return True
+        x = x.getparent()
+    return False
+
+
+def _ecuacion_sola(ecuacion):
+    """¿La fórmula va sola en su párrafo? Entonces Word la imprime a tamaño completo.
+
+    Word tiene dos modos: dentro de una frase encoge el numerador y el denominador al 73 %, y sola en su
+    párrafo —una celda de tabla, por ejemplo— los deja al tamaño declarado. Medido sobre el PDF:
+
+        declarada 11 pt  →  dentro de una frase 8 pt  ·  sola 11 pt
+        declarada 12,5 pt → dentro de una frase 9 pt  ·  sola 12,5 pt
+
+    Una ecuación que todavía no está en ningún párrafo (el glosario la mete después) cuenta como dentro
+    de una frase, que es donde acaba.
     """
+    p = ecuacion.getparent()
+    while p is not None and p.tag != W + "p":
+        p = p.getparent()
+    if p is None:
+        return False
+    return not any("".join(t.text or "" for t in r.iter(W + "t")).strip() for r in p.findall(W + "r"))
+
+
+def _ecuacion_al_tamano(ecuacion, size):
+    """Imprime la ecuación al tamaño pedido, lo mande quien lo mande el archivo de carga.
+
+    `size` es el tamaño con el que se quiere **ver** la fórmula, no el que se declara: Word encoge al
+    73 % lo que va en el numerador y en el denominador, así que esos trozos se declaran más grandes para
+    que salgan igual que el texto que los rodea. Medido sobre el PDF, con el cuerpo en 9 pt: declarando
+    9 pt la fracción salía a 6,5; declarando 12,5 sale a 9.
+
+    Lo que sí se deja encoger es el **exponente** y el índice de una raíz: un «x²» con el 2 tan grande
+    como la x no se lee como matemáticas. Y una fracción dentro de otra también queda más pequeña, que
+    es como se imprime en los libros.
+    """
+    sola = _ecuacion_sola(ecuacion)
     for r in ecuacion.iter(M + "r"):
+        compensa = _en_fraccion(r) and not sola
+        medios = round(size * 2 / ESCALA_FRACCION) if compensa else int(size * 2)
         rpr = r.find(W + "rPr")
         if rpr is None:
             rpr = _el("w:rPr")
@@ -382,8 +426,8 @@ def _ecuacion_pequena(ecuacion, size=8):
             (mpr.addnext(rpr) if mpr is not None else r.insert(0, rpr))
         for viejo in rpr.findall(W + "sz") + rpr.findall(W + "szCs"):
             rpr.remove(viejo)
-        rpr.append(_el("w:sz", **{"w:val": int(size * 2)}))
-        rpr.append(_el("w:szCs", **{"w:val": int(size * 2)}))
+        rpr.append(_el("w:sz", **{"w:val": str(medios)}))
+        rpr.append(_el("w:szCs", **{"w:val": str(medios)}))
         _ordenar(rpr, ORDEN_RPR)
     return ecuacion
 
@@ -491,6 +535,9 @@ class Copiadora:
             estilo_p = ppr.find(W + "pStyle") if ppr is not None else None
             fijar_formato_runs(p, origen.estilos, estilo_p.get(W + "val") if estilo_p is not None else None, tbl_sid)
             fijar_parrafo(p, origen.estilos, tbl_sid)
+        for om in el.iter(M + "oMath"):
+            # dentro de una tabla el texto va a 8 pt, fuera a 9: la ecuación se ajusta a su vecindario
+            _ecuacion_al_tamano(om, TAM_ECUACION_CHICA if tbl_sid or el.tag == W + "tbl" else TAM_ECUACION)
         for blip in el.iter("{%s}blip" % NS["a"]):
             rid = blip.get(R + "embed")
             if not rid:
@@ -938,7 +985,7 @@ def _armar_cuerpo(doc, s, c, cop, orden=None, piezas=None, ancla=None):
                     if omml:                       # una fórmula escrita con el editor de ecuaciones
                         ecuacion = glosario.ecuacion({"omml": omml})
                         if ecuacion is not None:
-                            pg.append(_ecuacion_pequena(ecuacion, size=8))
+                            pg.append(_ecuacion_al_tamano(ecuacion, TAM_ECUACION_CHICA))
                             continue
                     if texto:
                         pg.append(run_texto(texto, size=8, bold=negrita, italic=cursiva, vert=vert))

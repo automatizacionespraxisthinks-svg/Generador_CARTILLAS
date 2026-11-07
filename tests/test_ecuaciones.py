@@ -64,3 +64,47 @@ def test_una_ecuacion_vacia_no_estorba():
 def test_el_titulo_guarda_el_texto_para_quien_no_vea_la_formula():
     salida = a_mathml(omml(r("x=1")))
     assert 'title="x=1"' in salida
+
+
+# ================================================================== tamaño con el que se imprimen
+def _fraccion():
+    return etree.fromstring(
+        f'<m:oMath {M} xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<m:f><m:num><m:r><m:t>3</m:t></m:r></m:num>'
+        '<m:den><m:r><m:t>8</m:t></m:r></m:den></m:f>'
+        '<m:r><m:t>=</m:t></m:r></m:oMath>')
+
+
+def _tamanos(ecuacion):
+    from app.generador import M as MM, W
+    return [int(sz.get(W + "val")) / 2 for r in ecuacion.iter(MM + "r")
+            for sz in r.findall(W + "rPr/" + W + "sz")]
+
+
+def test_la_fraccion_dentro_de_una_frase_se_declara_mas_grande_para_salir_igual():
+    """Word encoge al 73 % el numerador y el denominador: hay que compensarlo o la fracción sale diminuta."""
+    from app.generador import _ecuacion_al_tamano
+
+    tam = _tamanos(_ecuacion_al_tamano(_fraccion(), 9))
+    assert sorted(tam) == [9.0, 12.5, 12.5], tam     # el «=» a 9; el 3 y el 8, compensados
+
+
+def test_la_fraccion_sola_en_su_parrafo_no_se_compensa():
+    """Sola en su párrafo —una celda de tabla— Word no la encoge: compensarla la dejaría enorme."""
+    from docx import Document
+
+    from app.generador import W, _ecuacion_al_tamano
+
+    doc = Document()
+    p = doc.add_paragraph()._p
+    ec = _fraccion()
+    p.append(ec)
+    assert set(_tamanos(_ecuacion_al_tamano(ec, 8))) == {8.0}
+
+    # y si el párrafo SÍ lleva texto, vuelve a compensarse
+    r = p.makeelement(W + "r", {})
+    t = p.makeelement(W + "t", {})
+    t.text = "A. "
+    r.append(t)
+    p.insert(0, r)
+    assert 11.0 in _tamanos(_ecuacion_al_tamano(ec, 8))

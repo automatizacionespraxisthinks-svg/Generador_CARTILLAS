@@ -30,6 +30,7 @@ FORMATOS = [
     ("Ejemplos llenos", "Ejercicio suelto", "ejemplos/EJEMPLO_1_EJERCICIO_SUELTO.docx", "Matemáticas I, 7°, con una tabla dentro del enunciado y glosario."),
     ("Ejemplos llenos", "Bloque de lectura", "ejemplos/EJEMPLO_2_BLOQUE_LECTURA.docx", "Comprensión Lectora, 7°, tres preguntas, línea de crédito y glosario en dos preguntas."),
     ("Ejemplos llenos", "Parte de Inglés", "ejemplos/EJEMPLO_3_PARTE_INGLES_COMPLETAR_TEXTO.docx", "Completar el texto, con los marcadores (#1) a (#5)."),
+    ("Ejemplos llenos", "Matemáticas con fórmulas", "ejemplos/EJEMPLO_4_MATEMATICAS_CON_FORMULAS.docx", "Matemáticas I, 6°, tres preguntas: fracciones apiladas, raíces, potencias y números mixtos escritos con el editor de ecuaciones, dentro del enunciado, de las opciones, de una tabla y del glosario."),
     ("Guía", "Instructivo de normalización", "INSTRUCTIVO_NORMALIZACION_v1.2.docx", "Todas las reglas (alineación, glosario, tablas) y la lista de chequeo antes de subir."),
     ("Guía", "Códigos del sistema (Excel)", "CODIGOS_PRAXIS.xlsx", "Los cinco pares del código de la cartilla, los catálogos de grado, materia y tipo, las 5 plantillas de respuestas y los prefijos de los códigos de ejercicio."),
 ]

@@ -19,11 +19,13 @@ def test_catalogos_precargados():
 
 
 def test_validar_varios_archivos():
+    """Todos los ejemplos pasan y lo que no es un Word se rechaza, sean los que sean los ejemplos."""
+    ejemplos = sorted(EJ.glob("*.docx"))
     with TestClient(app) as c:
-        archivos = [("archivos", (p.name, p.read_bytes())) for p in sorted(EJ.glob("*.docx"))]
+        archivos = [("archivos", (p.name, p.read_bytes())) for p in ejemplos]
         archivos.append(("archivos", ("notas.txt", b"hola")))
         res = c.post("/api/validar", files=archivos).json()
-        assert [r["estado"] for r in res] == ["aceptado", "aceptado", "aceptado", "rechazado"]
+        assert [r["estado"] for r in res] == ["aceptado"] * len(ejemplos) + ["rechazado"]
 
 
 def test_descargar_formatos():

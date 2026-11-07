@@ -62,3 +62,25 @@ def test_el_excel_de_codigos_trae_los_catalogos_de_hoy():
     assert por_sub[("Ciencias Naturales", "Biología")] == "Entorno vivo"
     assert por_sub[("Ciencias Naturales", "Química")] == "Entorno físico"
     assert "Matemáticas I" in [f[1] for f in filas]            # no dice «(vacía)»: es obligatoria
+
+
+def test_el_ejemplo_de_matematicas_ensena_las_formulas_apiladas():
+    """Es el ejemplo que se descarga para aprender a escribir matemáticas: tiene que predicar con el ejemplo."""
+    ruta = PLANTILLAS / "ejemplos/EJEMPLO_4_MATEMATICAS_CON_FORMULAS.docx"
+    doc = Document(str(ruta))
+    xml = doc.element.body.xml
+    assert xml.count("oMath") >= 20, "el ejemplo casi no trae ecuaciones de Word"
+    for pieza, nombre in (("m:f>", "fracción"), ("m:rad>", "raíz"), ("m:sSup>", "potencia")):
+        assert pieza in xml, f"el ejemplo no enseña cómo se escribe una {nombre}"
+    # y no puede traer ni una sola fracción con barra, que es justo lo que viene a desterrar
+    texto = "\n".join(p.text for p in doc.paragraphs)
+    texto += "\n".join(c.text for t in doc.tables for f in t.rows for c in f.cells)
+    import re
+    assert not re.search(r"\d\s*[/\u2044\u2215]\s*\d", texto), "el ejemplo trae una fracción con barra"
+    assert "√" not in texto and "^2" not in texto
+
+    # las fórmulas tienen que estar en los cuatro sitios donde cuesta ponerlas
+    enunciados = [p for p in doc.paragraphs if "oMath" in p._p.xml and not p.text.strip().startswith(("A.", "B.", "C.", "D."))]
+    opciones = [p for p in doc.paragraphs if p.text.strip().startswith(("A.", "B.", "C.", "D.")) and "oMath" in p._p.xml]
+    en_tablas = [c for t in doc.tables for f in t.rows for c in f.cells if "oMath" in c._tc.xml]
+    assert enunciados and opciones and en_tablas, "faltan fórmulas en el enunciado, en las opciones o en las tablas"

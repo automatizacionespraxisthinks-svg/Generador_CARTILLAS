@@ -1158,8 +1158,10 @@ document.addEventListener("click", async e => {
       pintarEditor();
       const caja = $("#msg-maqueta");
       caja.innerHTML = !r.ok ? esc(r.motivo || "No se pudo medir la cartilla.")
-        : !r.mejoro ? `No hay nada que ganar: la cartilla ya aprovecha el espacio (${r.antes.paginas} páginas, se pierden ${Math.round(r.antes.perdido / 28.35 * 10) / 10} cm en total).`
-        : `Listo: de <b>${r.antes.paginas}</b> a <b>${r.despues.paginas}</b> páginas · se adelantaron <b>${r.movidas.length}</b> pregunta(s): ${r.movidas.map(m => esc(m.codigo)).join(", ")}. Genera de nuevo para ver el resultado.`;
+        : !r.mejoro ? (r.antes.perdido < 28.35
+            ? `No hay nada que ganar: las ${r.antes.columnas} columnas ya quedan llenas (${r.antes.paginas} páginas). Lo que sobra tras la última pregunta no cuenta: ahí ya no va nada.`
+            : `No hay nada que ganar: se pierden ${Math.round(r.antes.perdido / 28.35 * 10) / 10} cm repartidos en ${r.antes.columnas} columnas (${r.antes.paginas} páginas), pero no hay ninguna pregunta de la misma sección que quepa en esos huecos.`)
+        : `Listo: de <b>${r.antes.paginas}</b> a <b>${r.despues.paginas}</b> páginas · se adelantaron <b>${r.movidas.length}</b> ${r.movidas.length === 1 ? "pregunta" : "preguntas"}: ${r.movidas.map(m => esc(m.codigo)).join(", ")}. Genera de nuevo para ver el resultado.`;
     } catch (err) {
       $("#msg-maqueta").textContent = JSON.parse(err.message).detail || err.message;
       maq.disabled = false;

@@ -786,13 +786,18 @@ def reordenar(cid, seccion_id, orden_ids):
         if set(orden_ids) != set(items):
             raise ErrorArmado("La lista de orden no coincide con los ejercicios de la sección.")
         bloques = {}
-        for eid in orden_ids:
+        for sitio, eid in enumerate(orden_ids):
             e = s.get(Ejercicio, eid)
             if e.bloque_id:
-                bloques.setdefault(e.bloque_id, []).append(orden_ids.index(eid))
-        for posiciones_bloque in bloques.values():
-            if posiciones_bloque != list(range(min(posiciones_bloque), min(posiciones_bloque) + len(posiciones_bloque))):
+                bloques.setdefault(e.bloque_id, []).append((sitio, e.orden_en_bloque))
+        for pares in bloques.values():
+            sitios = [x for x, _ in pares]
+            if sitios != list(range(min(sitios), min(sitios) + len(sitios))):
                 raise ErrorArmado("Las preguntas de un bloque o de una parte van seguidas: no se pueden separar.")
+            # y en SU orden: las preguntas de una lectura se refieren al mismo texto y se apoyan entre sí
+            if [o for _, o in pares] != sorted(o for _, o in pares):
+                raise ErrorArmado("Las preguntas de un bloque o de una parte conservan el orden que traía "
+                                  "el archivo: no se pueden barajar entre ellas.")
         for n, eid in enumerate(orden_ids, 1):
             items[eid].posicion = n
         s.commit()

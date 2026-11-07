@@ -152,8 +152,13 @@ def columnas(piezas, altos, medida, fondo):
 
 
 def desperdicio(cols):
-    """Espacio que se pierde al final de las columnas, en puntos."""
-    return round(sum(max(0.0, c["hueco"]) for c in cols), 1)
+    """Espacio que se pierde al final de las columnas, en puntos.
+
+    **La última columna no cuenta.** Lo que sobra detrás de la última pregunta no es desperdicio: no hay
+    nada después que se pueda adelantar hasta ahí. Contarlo inflaba la cifra —en una cartilla de 140
+    preguntas eran 459 de los 460 puntos «perdidos»— y hacía creer que había mucho que ganar.
+    """
+    return round(sum(max(0.0, c["hueco"]) for c in cols[:-1]), 1)
 
 
 def orden_por_seccion(piezas, orden):

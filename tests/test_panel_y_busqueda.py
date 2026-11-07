@@ -347,6 +347,43 @@ def test_el_reordenador_no_mete_preguntas_dentro_de_un_bloque():
     assert maqueta.proponer(piezas, altos, cols, ["E1", "E2", "E3"]) == []
 
 
+def test_el_reordenador_si_adelanta_una_pregunta_cuando_cabe():
+    """Lo contrario del caso anterior: con un hueco de verdad tiene que proponer algo."""
+    from app import maqueta
+
+    piezas = [{"clave": "E1", "tipo": "pregunta", "seccion": 1, "codigo": "A", "bloque": None},
+              {"clave": "E2", "tipo": "pregunta", "seccion": 1, "codigo": "B", "bloque": None},
+              {"clave": "E3", "tipo": "pregunta", "seccion": 1, "codigo": "C", "bloque": None}]
+    altos = {"E1": 100, "E2": 500, "E3": 120}
+    # la columna acaba en E1 y le sobran 200 pt: E2 no cabe, pero E3 sí
+    cols = [{"piezas": ["E1"], "hueco": 200}, {"piezas": ["E2", "E3"], "hueco": 0}]
+    p = maqueta.proponer(piezas, altos, cols, ["E1", "E2", "E3"])
+    assert [x["clave"] for x in p] == ["E3"] and p[0]["tras"] == "E1"
+
+    # si no cupiera ninguna, no propone nada
+    assert maqueta.proponer(piezas, {"E1": 100, "E2": 500, "E3": 500}, cols, ["E1", "E2", "E3"]) == []
+
+
+def test_el_reordenador_no_mezcla_secciones():
+    """Adelantar una pregunta de otra sección cambiaría de sitio un área entera de la prueba."""
+    from app import maqueta
+
+    piezas = [{"clave": "E1", "tipo": "pregunta", "seccion": 1, "codigo": "A", "bloque": None},
+              {"clave": "S2", "tipo": "titulo", "seccion": 2, "codigo": None, "bloque": None},
+              {"clave": "E2", "tipo": "pregunta", "seccion": 2, "codigo": "B", "bloque": None}]
+    cols = [{"piezas": ["E1"], "hueco": 400}]
+    assert maqueta.proponer(piezas, {"E1": 100, "E2": 80}, cols, ["E1", "S2", "E2"]) == []
+
+
+def test_lo_que_sobra_tras_la_ultima_pregunta_no_es_desperdicio():
+    """No hay nada después que adelantar hasta ahí: contarlo hacía creer que había mucho que ganar."""
+    from app import maqueta
+
+    assert maqueta.desperdicio([{"hueco": 30}, {"hueco": 50}, {"hueco": 659}]) == 80
+    assert maqueta.desperdicio([{"hueco": 659}]) == 0          # una sola columna: toda ella es la cola
+    assert maqueta.desperdicio([]) == 0
+
+
 # ================================================================== prompt para pasar simulacros al formato
 def test_el_prompt_sale_de_los_catalogos_de_verdad(c):
     """No está escrito a mano: si mañana hay una materia o un grado nuevo, el prompt lo dice solo."""
@@ -710,3 +747,65 @@ def test_una_seccion_puede_mezclar_varias_materias(c):
     materias = {x["materia"] for x in c.get(f"/api/cartillas/{d['id']}/candidatos",
                                             params={"seccion": sec["id"]}).json()["items"]}
     assert "Filosofía" in materias and "Ciencias Sociales" in materias, materias
+
+
+def test_adelantar_una_pregunta_conserva_la_cartilla_entera(c):
+    """El camino que de verdad mueve: se aplica el orden nuevo y la cartilla tiene que quedar intacta.
+
+    Cambia la numeración, y nada más: las mismas preguntas, en la misma sección y sin huecos.
+    """
+    from app.armado import reordenar
+
+    version = len(c.get("/api/cartillas").json()) + 1
+    d = c.post("/api/cartillas", json={**DATOS, "version": version}).json()
+    sec = next(s for s in d["secciones"] if s["titulo"] == "MATEMÁTICAS I")      # preguntas sueltas
+    cuerpo = [{"id": s["id"], "titulo": s["titulo"], "materia": s["materia"], "submateria": s["submateria"],
+               "cantidad": 3 if s["id"] == sec["id"] else 0, "dificultad": "lib"} for s in d["secciones"]]
+    c.put(f"/api/cartillas/{d['id']}/secciones", json={"secciones": cuerpo})
+    c.post(f"/api/cartillas/{d['id']}/secciones/{sec['id']}/automatica", json={})
+
+    antes = posiciones_guardadas(d["id"], sec["id"])
+    assert len(antes) >= 2, "la prueba necesita varias preguntas sueltas"
+
+    # se le da la vuelta al orden, como haría un adelanto, y se aplica igual que hace maqueta.optimizar
+    from sqlalchemy import select
+
+    from app.bd import Ejercicio, Sesion
+
+    codigos = [cod for _pos, cod, _b, _o in antes]
+    with Sesion() as s:
+        ids = {e.codigo: e.id for e in s.scalars(select(Ejercicio).where(Ejercicio.codigo.in_(codigos)))}
+    reordenar(d["id"], sec["id"], [ids[cod] for cod in reversed(codigos)])
+
+    despues = posiciones_guardadas(d["id"], sec["id"])
+    assert len(despues) == len(antes), "se perdió o se duplicó alguna pregunta"
+    assert {cod for _p, cod, *_ in despues} == set(codigos), "cambiaron las preguntas"
+    assert [p for p, *_ in despues] == list(range(1, len(despues) + 1)), "la numeración quedó con huecos"
+    assert [cod for _p, cod, *_ in despues] == list(reversed(codigos)), "no se aplicó el orden pedido"
+
+
+def test_no_se_puede_dar_la_vuelta_a_un_bloque(c):
+    """Las preguntas de una lectura se apoyan en el mismo texto: barajarlas la deja sin sentido."""
+    import pytest as _pytest
+
+    from app.armado import ErrorArmado, reordenar
+
+    version = len(c.get("/api/cartillas").json()) + 1
+    d = c.post("/api/cartillas", json={**DATOS, "version": version}).json()
+    sec = next(s for s in d["secciones"] if s["titulo"] == "COMPRENSIÓN LECTORA")
+    cuerpo = [{"id": s["id"], "titulo": s["titulo"], "materia": s["materia"], "submateria": s["submateria"],
+               "cantidad": 2 if s["id"] == sec["id"] else 0, "dificultad": "lib"} for s in d["secciones"]]
+    c.put(f"/api/cartillas/{d['id']}/secciones", json={"secciones": cuerpo})
+    c.post(f"/api/cartillas/{d['id']}/secciones/{sec['id']}/automatica", json={})
+
+    filas = posiciones_guardadas(d["id"], sec["id"])
+    assert any(bid for _p, _c, bid, _o in filas), "la prueba necesita un bloque"
+    from sqlalchemy import select
+
+    from app.bd import Ejercicio, Sesion
+
+    codigos = [cod for _pos, cod, _b, _o in filas]
+    with Sesion() as s:
+        ids = {e.codigo: e.id for e in s.scalars(select(Ejercicio).where(Ejercicio.codigo.in_(codigos)))}
+    with _pytest.raises(ErrorArmado, match="orden"):
+        reordenar(d["id"], sec["id"], [ids[cod] for cod in reversed(codigos)])

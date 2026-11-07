@@ -22,12 +22,13 @@ el cuadernillo sale con exactamente las mismas claves que sus Excel.
 import copy
 import io
 import re
+import zipfile
 
 from docx import Document
 from sqlalchemy import select
 
 from app import generador, paginas
-from app.bd import Cartilla, Sesion
+from app.bd import Cartilla, CartillaArchivo, Sesion
 from app.generador import (BASE_DOCX, MARCA_CUERPO, MEDIA_DOCX, ORDEN_SECTPR, W, Copiadora, ErrorGeneracion,
                            _el, _ordenar, texto_de)
 
@@ -215,8 +216,21 @@ def nombre_sugerido(cartillas):
         f"{cartillas[0].codigo} y {len(cartillas) - 1} sesiones más"
 
 
+def _excel_de(s, c):
+    """El Excel de claves que ya tiene guardado esa sesión, tal cual se generó."""
+    a = s.scalar(select(CartillaArchivo).where(CartillaArchivo.cartilla_id == c.id,
+                                               CartillaArchivo.tipo == "xlsx"))
+    if a is None:
+        raise ErrorGeneracion(f"La cartilla {c.codigo} no tiene su Excel de claves guardado: genérala de nuevo.")
+    return a.nombre, a.datos
+
+
 def generar(ids, nombre_archivo=None):
-    """Arma el Word del cuadernillo y lo devuelve (nombre, bytes). No cambia las cartillas."""
+    """Arma el cuadernillo y lo devuelve en un ZIP: el Word para imprimir y un Excel por sesión.
+
+    Los Excel no se juntan —cada sesión se califica con su propia hoja de respuestas y el lector OMR
+    necesita el código de esa sesión—, pero sí viajan con el Word, que es lo que se va a usar el mismo día.
+    """
     with Sesion() as s:
         cartillas = _traer(s, ids)
         datos, claves = _construir(s, cartillas)
@@ -227,8 +241,17 @@ def generar(ids, nombre_archivo=None):
         if not nombre or re.search(r'[\\/:*?"<>|]', nombre):
             raise ErrorGeneracion('El nombre del archivo no puede ir vacío ni llevar estos caracteres: '
                                   '\\ / : * ? " < > |')
+        excels = [_excel_de(s, c) for c in cartillas]
         n = paginas.contar(datos)
-        return {"nombre": f"{nombre}.docx", "datos": datos, "paginas": n,
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr(f"{nombre}.docx", datos)
+            for i, (nombre_xlsx, bytes_xlsx) in enumerate(excels, 1):
+                # el número de sesión delante: así se ve de un vistazo cuál va en la mañana y cuál en la tarde
+                z.writestr(f"Sesion {i} - {nombre_xlsx}", bytes_xlsx)
+        return {"nombre": f"{nombre}.zip", "datos": buf.getvalue(), "paginas": n,
                 "faltan_paginas": paginas.faltan_para_multiplo(n),
+                "archivos": [f"{nombre}.docx"] + [f"Sesion {i} - {x[0]}" for i, x in enumerate(excels, 1)],
                 "sesiones": [{"codigo": c.codigo, "nombre": c.nombre, "preguntas": len(k)}
                              for c, k in zip(cartillas, claves)]}

@@ -425,14 +425,17 @@ def api_cuadernillo_previo(cuerpo: dict = Body(...)):
 
 @app.post("/api/cuadernillo/generar")
 def api_cuadernillo_generar(cuerpo: dict = Body(...)):
-    """Arma el Word con todas las sesiones y lo devuelve para descargar. No cambia las cartillas."""
+    """Devuelve un ZIP con el Word de todas las sesiones y el Excel de claves de cada una.
+
+    No cambia las cartillas: solo junta lo que ya tienen generado.
+    """
     try:
         r = cuadernillo.generar([int(x) for x in cuerpo.get("cartillas") or []], cuerpo.get("nombre"))
     except (TypeError, ValueError):
         raise HTTPException(400, "La lista de cartillas no es válida.")
     except generador.ErrorGeneracion as e:
         raise HTTPException(400, str(e))
-    return Response(r["datos"], media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    return Response(r["datos"], media_type="application/zip",
                     headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(r['nombre'])}",
                              # el conteo necesita Word: sin él van vacías, y 0 es un dato, no un vacío
                              "X-Praxis-Paginas": "" if r["paginas"] is None else str(r["paginas"]),

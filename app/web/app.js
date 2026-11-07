@@ -558,14 +558,15 @@ async function descargarCuadernillo() {
       aviso.textContent = d.detail || "No se pudo armar el cuadernillo.";
       return;
     }
-    const nombre = decodeURIComponent((r.headers.get("content-disposition") || "").split("''")[1] || "cuadernillo.docx");
+    const nombre = decodeURIComponent((r.headers.get("content-disposition") || "").split("''")[1] || "cuadernillo.zip");
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
     const a = Object.assign(document.createElement("a"), {href: url, download: nombre});
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
     const paginas = r.headers.get("X-Praxis-Paginas"), faltan = r.headers.get("X-Praxis-Faltan");
-    aviso.textContent = `Descargado: ${nombre}.` + (paginas
+    const cuantas = ELEGIDAS.length;
+    aviso.textContent = `Descargado: ${nombre} · dentro va el Word para imprimir y el Excel de claves de cada una de las ${cuantas} sesiones.` + (paginas
       ? ` ${paginas} páginas${faltan && faltan !== "0" ? `, faltan ${faltan} para el múltiplo de 4.` : ", múltiplo de 4."}`
       : (OPC && OPC.hay_word === false
           ? " Este servidor no tiene Word, así que no cuenta las páginas: ábrelo en Word y mira el total abajo a la izquierda. Para imprimir tipo folleto tiene que ser múltiplo de 4."

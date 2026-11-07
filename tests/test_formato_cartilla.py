@@ -689,3 +689,67 @@ def test_la_cartilla_sale_lista_para_imprimir_como_folleto(c):
     assert secciones, "la cartilla no tiene secciones"
     assert len(set(secciones)) == 1, f"las secciones no coinciden y Word no imprimiría el folleto: {set(secciones)}"
     assert secciones[0] == ("12240", "15840", "landscape", str(CODIGO_PAPEL), str(MARGEN_PLIEGUE)), secciones[0]
+
+
+def test_preparar_para_folleto_arregla_un_word_viejo():
+    """Las cartillas generadas antes del 07/11/2026 salían en vertical: hay que dejarlas imprimibles."""
+    import io
+
+    from docx import Document
+    from docx.shared import Cm
+
+    from app.generador import CODIGO_PAPEL, MARGEN_PLIEGUE, W, preparar_para_folleto
+
+    viejo = Document()
+    for sec in viejo.sections:                      # como salían antes: vertical y sin pliegue
+        sec.page_width, sec.page_height = Cm(21.59), Cm(27.94)
+    buf = io.BytesIO()
+    viejo.save(buf)
+
+    arreglado = preparar_para_folleto(buf.getvalue())
+    assert arreglado is not None, "no detectó que había que arreglarlo"
+    doc = Document(io.BytesIO(arreglado))
+    assert doc.settings.element.find(W + "bookFoldPrinting") is not None
+    for sect in doc.element.body.iter(W + "sectPr"):
+        pg, mar = sect.find(W + "pgSz"), sect.find(W + "pgMar")
+        assert (pg.get(W + "orient"), pg.get(W + "code")) == ("landscape", str(CODIGO_PAPEL))
+        assert mar.get(W + "gutter") == str(MARGEN_PLIEGUE)
+
+    # y si ya estaba bien, no reescribe el archivo
+    assert preparar_para_folleto(arreglado) is None
+
+
+def test_la_migracion_deja_imprimibles_las_cartillas_viejas(c):
+    """La migración 10 corrige los Word guardados y borra su número de páginas, que deja de ser cierto."""
+    import io
+
+    from docx import Document
+    from sqlalchemy import select
+
+    from app.bd import Cartilla, CartillaArchivo, Sesion
+    from app.generador import W
+    from app.migraciones import _v10_listas_para_folleto
+
+    with Sesion() as s:
+        a = s.scalars(select(CartillaArchivo).where(CartillaArchivo.tipo == "docx")).first()
+        assert a is not None, "la prueba necesita una cartilla generada"
+        doc = Document(io.BytesIO(a.datos))
+        for sect in doc.element.body.iter(W + "sectPr"):       # se le devuelve el formato viejo
+            sect.find(W + "pgSz").attrib.pop(W + "orient", None)
+            sect.find(W + "pgMar").set(W + "gutter", "0")
+        buf = io.BytesIO()
+        doc.save(buf)
+        a.datos = buf.getvalue()
+        cid = a.cartilla_id
+        s.get(Cartilla, cid).paginas = 26
+        s.commit()
+
+    assert _v10_listas_para_folleto() >= 1
+
+    with Sesion() as s:
+        a = s.scalar(select(CartillaArchivo).where(CartillaArchivo.cartilla_id == cid,
+                                                   CartillaArchivo.tipo == "docx"))
+        doc = Document(io.BytesIO(a.datos))
+        orientaciones = {sect.find(W + "pgSz").get(W + "orient") for sect in doc.element.body.iter(W + "sectPr")}
+        assert orientaciones == {"landscape"}
+        assert s.get(Cartilla, cid).paginas is None, "el conteo viejo deja de ser cierto al cambiar el margen"

@@ -4,13 +4,13 @@ Desde la fase 2 el banco guarda datos reales, así que ningún cambio de estruct
 puede borrarlos. Cada cambio futuro se agrega aquí como un paso numerado, que se
 aplica una sola vez al arrancar el sistema.
 """
-from sqlalchemy import Integer, text
+from sqlalchemy import Integer, select, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.bd import Base, Sesion
 
-VERSION_ACTUAL = 9
+VERSION_ACTUAL = 10
 
 # «Materia|Submateria» que admite la sección CIENCIAS SOCIALES de 6° a 9° (ver app/catalogos_base.py)
 ADMITE_SOCIALES_SQL = "Ciencias Sociales|;Ciencias Sociales|Ciencias Económicas y Políticas"
@@ -45,7 +45,39 @@ MIGRACIONES: dict[int, list[str]] = {
         "ALTER TABLE cartilla ADD COLUMN imagen BLOB",
         "ALTER TABLE cartilla ADD COLUMN imagen_nombre VARCHAR(160)",
     ],
+    10: [],  # los Word ya generados se arreglan con _v10_listas_para_folleto (no es un cambio de esquema)
 }
+
+
+def _v10_listas_para_folleto():
+    """Deja imprimibles como folleto las cartillas ya generadas (ver generador.preparar_para_folleto).
+
+    Se generaron con las páginas en vertical y Libro plegado activo, que es la combinación que Word
+    rechaza. Se corrige el Word guardado y se borra su número de páginas, porque el margen de pliegue
+    cambia el reparto y el conteo viejo dejaría de ser cierto.
+    """
+    from app.bd import Cartilla, CartillaArchivo          # noqa: PLC0415  (evita importarlo al arrancar)
+    from app.generador import preparar_para_folleto
+
+    arreglados = 0
+    with Sesion() as s:
+        for a in s.scalars(select(CartillaArchivo).where(CartillaArchivo.tipo == "docx")):
+            try:
+                nuevos = preparar_para_folleto(a.datos)
+            except Exception:
+                continue                                   # un Word ilegible no puede frenar el arranque
+            if nuevos is None:
+                continue
+            a.datos = nuevos
+            c = s.get(Cartilla, a.cartilla_id)
+            if c is not None:
+                c.paginas = None
+            arreglados += 1
+        s.commit()
+    return arreglados
+
+
+PASOS_PYTHON = {10: _v10_listas_para_folleto}
 
 
 class VersionEsquema(Base):
@@ -72,6 +104,9 @@ def aplicar():
                     s.rollback()
                     if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
                         raise
+            paso = PASOS_PYTHON.get(v)
+            if paso is not None:
+                paso()
             fila = s.get(VersionEsquema, 1)
             fila.version = v
             s.commit()

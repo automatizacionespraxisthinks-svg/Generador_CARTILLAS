@@ -754,6 +754,37 @@ def elementos_de_portada(doc):
     raise ErrorGeneracion(f"La plantilla no tiene la marca {MARCA_CUERPO}.")
 
 
+def preparar_para_folleto(datos: bytes) -> bytes | None:
+    """Deja un Word YA GENERADO listo para imprimir como folleto, sin tocar su contenido.
+
+    Las cartillas generadas antes del 07/11/2026 traían `bookFoldPrinting` activo pero las páginas en
+    vertical, que es la combinación imposible: Word calcula para ellas un pliego de 8,5 × 22 pulgadas y
+    se niega a imprimir. Esto les pone la orientación, el papel y el margen de pliegue que les faltaban.
+
+    Devuelve los bytes corregidos, o None si ya estaban bien y no había nada que hacer.
+    """
+    doc = Document(io.BytesIO(datos))
+    cambios = doc.settings.element.find(W + "bookFoldPrinting") is None
+    if cambios:
+        doc.settings.element.append(_el("w:bookFoldPrinting"))
+    for sect in doc.element.body.iter(W + "sectPr"):
+        pg, mar = sect.find(W + "pgSz"), sect.find(W + "pgMar")
+        if pg is not None and (pg.get(W + "orient") != "landscape" or pg.get(W + "code") != str(CODIGO_PAPEL)):
+            pg.set(W + "w", "12240")
+            pg.set(W + "h", "15840")
+            pg.set(W + "orient", "landscape")
+            pg.set(W + "code", str(CODIGO_PAPEL))
+            cambios = True
+        if mar is not None and mar.get(W + "gutter") != str(MARGEN_PLIEGUE):
+            mar.set(W + "gutter", str(MARGEN_PLIEGUE))
+            cambios = True
+    if not cambios:
+        return None
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
 def _configurar_pagina(doc, media=False):
     """Carta preparada para **imprimir tipo folleto**, con pies distintos en pares e impares.
 

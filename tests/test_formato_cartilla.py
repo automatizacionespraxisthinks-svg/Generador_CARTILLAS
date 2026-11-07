@@ -646,3 +646,46 @@ def test_el_color_del_ejercicio_llega_a_la_cartilla(c, tmp_path):
     word = c.get(f"/api/cartillas/{cid}/archivo/docx").content
     colores = set(re.findall(r'<w:color w:val="([0-9A-Fa-f]{6})"', Document(io.BytesIO(word)).element.body.xml))
     assert "C00000" in {x.upper() for x in colores}, f"el rojo no llegó a la cartilla: {colores}"
+
+
+def test_la_cartilla_sale_lista_para_imprimir_como_folleto(c):
+    """Word solo imprime «Libro plegado» si TODAS las secciones coinciden.
+
+    Salía en vertical y sin margen de pliegue; al activarlo a mano, Word convertía solo la sección del
+    cursor y dejaba el archivo mezclado, que es lo que impedía imprimirlo.
+    """
+    import io
+
+    from docx import Document
+
+    from app.generador import CODIGO_PAPEL, MARGEN_PLIEGUE, W
+    from tests.fabrica import ejercicio
+
+    nombre, datos = ejercicio("Folleto de prueba", grado="77", materia="Matemáticas",
+                              submateria="Matemáticas I", pensamiento="Numérico", dba="DBA 2",
+                              competencia="Resolución de problemas", clave="A", variante="folleto")
+    assert c.post("/api/cargar", files=[("archivos", (nombre, datos))],
+                  data={"solo_revisar": "false"}).json()[0]["estado"] == "aceptado"
+    d = c.post("/api/cartillas", json={"grado": "77", "estructura": "E4", "tipo_material": "55",
+                                       "plantilla": 1, "codigo_materia": "03", "institucion": "Folleto",
+                                       "nombre": "FOLLETO", "simulacro_n": 7, "version": 41}).json()
+    cid = d["id"]
+    sec = c.put(f"/api/cartillas/{cid}/secciones", json={"secciones": [
+        {"titulo": "MATEMÁTICAS I", "materia": "Matemáticas", "submateria": "Matemáticas I",
+         "cantidad": 1, "dificultad": "lib"}]}).json()["secciones"][0]
+    elegido = next(x for x in c.get(f"/api/cartillas/{cid}/candidatos",
+                                    params={"seccion": sec["id"]}).json()["items"]
+                   if x["tematica"] == "Folleto de prueba")
+    c.post(f"/api/cartillas/{cid}/items", json={"seccion": sec["id"], "ejercicio": elegido["id"]})
+    assert c.post(f"/api/cartillas/{cid}/generar", json={}).status_code == 200
+
+    doc = Document(io.BytesIO(c.get(f"/api/cartillas/{cid}/archivo/docx").content))
+    assert doc.settings.element.find(W + "bookFoldPrinting") is not None, "falta el ajuste de libro plegado"
+    secciones = []
+    for sect in doc.element.body.iter(W + "sectPr"):
+        pg, mar = sect.find(W + "pgSz"), sect.find(W + "pgMar")
+        secciones.append((pg.get(W + "w"), pg.get(W + "h"), pg.get(W + "orient"),
+                          pg.get(W + "code"), mar.get(W + "gutter")))
+    assert secciones, "la cartilla no tiene secciones"
+    assert len(set(secciones)) == 1, f"las secciones no coinciden y Word no imprimiría el folleto: {set(secciones)}"
+    assert secciones[0] == ("12240", "15840", "landscape", str(CODIGO_PAPEL), str(MARGEN_PLIEGUE)), secciones[0]

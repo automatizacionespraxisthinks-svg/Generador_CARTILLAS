@@ -44,6 +44,8 @@ PERIODOS = {"11": "1° Periodo", "22": "2° Periodo", "33": "3° Periodo", "44":
 ABREV_NIVEL = {"Básico": "BB", "Medio": "MM", "Avanzado": "AA"}
 ESPACIO_COLUMNAS = 454          # 0,8 cm entre columnas: cada columna mide 9,12 cm
 MARGEN_INFERIOR = 880           # twips (1,55 cm): 720 de margen + la holgura del pie (ver _configurar_pagina)
+MARGEN_PLIEGUE = 284            # twips (0,5 cm) de margen interior: se lo come el doblez del folleto
+CODIGO_PAPEL = 3                # papel 11 × 17 pulgadas (tabloide), el pliego que se dobla
 MARGEN_CELDA_VERTICAL = 20     # 1 pt arriba y abajo del texto de cada celda
 ESPACIO_FIGURA = 6              # pt de aire arriba y abajo de cada imagen y de cada tabla
 # tamaño al que se IMPRIME una ecuación: el mismo del texto que la rodea (ver _ecuacion_al_tamano)
@@ -753,7 +755,19 @@ def elementos_de_portada(doc):
 
 
 def _configurar_pagina(doc, media=False):
-    """Carta vertical, márgenes estrechos sin encuadernación y pies distintos en pares e impares.
+    """Carta preparada para **imprimir tipo folleto**, con pies distintos en pares e impares.
+
+    La cartilla se imprime en pliegos de 11 × 17 pulgadas doblados por la mitad, con dos páginas carta
+    por cara. Eso en Word es **Libro plegado**, y son tres cosas a la vez:
+
+    - `w:bookFoldPrinting` en los ajustes del documento (una sola vez, para todo el archivo);
+    - cada sección con la página carta marcada como `landscape`, que es como Word dice «el pliego va
+      apaisado y lleva dos páginas»;
+    - un `gutter` de 284 twips (0,5 cm), el margen interior que se come el doblez.
+
+    **Las tres tienen que estar en TODAS las secciones.** Si una queda en vertical, Word se niega a
+    imprimir el folleto, y era justo lo que pasaba: el documento salía vertical y, al activarlo a mano,
+    Word convertía solo la sección donde estaba el cursor y dejaba el archivo mezclado.
 
     media: con media portada el cuerpo arranca debajo de la portada, en la misma página, así que el
     corte entre la portada y el cuerpo es **continuo**; con portada entera, el cuerpo empieza en la
@@ -768,14 +782,14 @@ def _configurar_pagina(doc, media=False):
         if pg is not None:
             pg.set(W + "w", "12240")
             pg.set(W + "h", "15840")
-            if pg.get(W + "orient"):
-                del pg.attrib[W + "orient"]
+            pg.set(W + "orient", "landscape")
+            pg.set(W + "code", str(CODIGO_PAPEL))
         mar = sect.find(W + "pgMar")
         if mar is not None:
             for lado in ("top", "right", "left"):
                 mar.set(W + lado, "720")
             mar.set(W + "bottom", str(MARGEN_INFERIOR))
-            mar.set(W + "gutter", "0")
+            mar.set(W + "gutter", str(MARGEN_PLIEGUE))
             mar.set(W + "footer", "283")
             mar.set(W + "header", "283")
         cols = sect.find(W + "cols")
@@ -794,6 +808,8 @@ def _configurar_pagina(doc, media=False):
         ultimo.append(_el("w:type", **{"w:val": "nextPage"}))
         _ordenar(ultimo, ORDEN_SECTPR)
     doc.settings.odd_and_even_pages_header_footer = True
+    if doc.settings.element.find(W + "bookFoldPrinting") is None:
+        doc.settings.element.append(_el("w:bookFoldPrinting"))
     # en un párrafo justificado, la línea que termina con Mayús+Enter (versos, direcciones) no se estira
     compat = doc.settings.element.find(W + "compat")
     if compat is None:

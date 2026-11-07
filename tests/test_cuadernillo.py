@@ -231,3 +231,20 @@ def test_todas_las_sesiones_llevan_la_linea_entre_columnas(c, dos):
     una = [cols for sect in doc.element.body.iter(W + "sectPr")
            for cols in sect.findall(W + "cols") if cols.get(W + "num") == "1"]
     assert una and all(c.get(W + "sep") is None for c in una), "la media portada no lleva línea del medio"
+
+
+def test_el_cuadernillo_tambien_sale_listo_para_el_folleto(c, dos):
+    """Las secciones que se crean al juntar sesiones heredan la configuración de la plantilla."""
+    from app.generador import CODIGO_PAPEL, MARGEN_PLIEGUE
+
+    (ida, _), (idb, _) = dos
+    r = c.post("/api/cuadernillo/generar", json={"cartillas": [ida, idb]})
+    doc = Document(io.BytesIO(abrir_zip(r.content)[1]))
+    assert doc.settings.element.find(W + "bookFoldPrinting") is not None
+    secciones = set()
+    for sect in doc.element.body.iter(W + "sectPr"):
+        pg, mar = sect.find(W + "pgSz"), sect.find(W + "pgMar")
+        secciones.add((pg.get(W + "w"), pg.get(W + "h"), pg.get(W + "orient"),
+                       pg.get(W + "code"), mar.get(W + "gutter")))
+    assert len(secciones) == 1, f"Word no imprimiría el folleto con secciones distintas: {secciones}"
+    assert secciones.pop() == ("12240", "15840", "landscape", str(CODIGO_PAPEL), str(MARGEN_PLIEGUE))

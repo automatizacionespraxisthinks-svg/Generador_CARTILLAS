@@ -1069,11 +1069,26 @@ se copia tal cual de la cartilla de muestra en vez de rehacerla, para que salga 
 > varias hojas. Con 1,55 cm quedan 5 pt de holgura. Comprobado en el PDF de una cartilla de 26 páginas:
 > ninguna línea separadora invade el pie.
 
-> **Corrección necesaria:** la cartilla actual declara `orientación = horizontal` con medidas verticales. Es una contradicción interna que puede alterar la impresión. El sistema generará siempre orientación vertical.
+> **Rectificación del 07/11/2026.** La v1.2 daba por «contradicción interna» que la cartilla declarara
+> `orientación = horizontal` con medidas de página verticales, y mandaba forzar siempre vertical. **Era una
+> lectura equivocada**: esa combinación es precisamente la firma de **Libro plegado** en Word. Forzar vertical
+> dejaba el archivo imposible de imprimir como folleto, y es lo que se corrige aquí.
 
-La impresión tipo revista se hace con la función **Folleto** de la impresora, que toma dos páginas carta y las
+La impresión tipo revista se hace con la función **Libro plegado** de Word, que toma dos páginas carta y las
 imprime en una hoja de **11 × 17 pulgadas** (doble carta). El Word no necesita reordenar páginas: por eso el
 cuadernillo tiene que terminar en un **múltiplo de 4 páginas** (3.7), que son las cuatro caras de cada hoja doblada.
+
+**Cómo queda configurado el archivo.** El sistema lo deja listo al generar; son tres cosas que van juntas:
+
+| Dónde | Qué lleva | Para qué |
+|---|---|---|
+| Ajustes del documento | `w:bookFoldPrinting` | activa Libro plegado para todo el archivo |
+| Cada sección | `w:pgSz` 12240 × 15840 con `orient="landscape"` y `code="3"` | página carta sobre pliego de 11 × 17 |
+| Cada sección | `w:pgMar` con `gutter="284"` (0,5 cm) | margen interior que se come el doblez |
+
+**Las tres tienen que estar en TODAS las secciones.** Si una queda en vertical, Word calcula para ella un
+pliego de 8,5 × 22 pulgadas —dos páginas apiladas, un papel que no existe— y se niega a imprimir el folleto.
+Por eso no sirve activarlo a mano en Word una vez generado: lo aplica solo a la sección donde está el cursor.
 
 **Color de impresión:** la **portada va a color**. El cuerpo se imprime en blanco y negro **salvo que lleve ejercicios a color**: desde el 07/11/2026 se admiten texto, imágenes y celdas de color, porque hay preguntas cuya respuesta depende del color (banderas, mapas, reacciones químicas, gráficas de varias series). Esas cartillas se mandan a imprimir a color. Lo único que se sigue rechazando es lo que no se vería sobre el papel: texto casi blanco y celdas casi negras.
 

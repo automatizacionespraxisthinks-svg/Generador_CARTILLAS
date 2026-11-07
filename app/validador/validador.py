@@ -797,11 +797,14 @@ class Validador:
             k = i + 1
             while k < len(chars) and chars[k][0] == " ":
                 k += 1
-            if j >= 0 and k < len(chars) and chars[j][0] in DIGITOS and chars[k][0] in DIGITOS:
-                # desde el 06/11/2026 tampoco vale ³/₄: la fracción va APILADA, como en un libro de texto
-                self.r.error(18, donde, f"«{recorte(texto, j, k + 1, 6)}» es una fracción escrita con barra. "
-                                        "Escríbela con el editor de ecuaciones de Word (Insertar › Ecuación), "
-                                        "apilada como en un libro: ni «3/8» ni «³/₈». Las fechas van sin barra.")
+            if (j >= 0 and k < len(chars) and chars[j][0] in DIGITOS and chars[k][0] in DIGITOS
+                    and (chars[j][1] is not None or chars[k][1] is not None)):
+                # Lo que se rechaza es el TAMAÑO, no la barra: «³/₈» sale diminuto y cuesta leerlo.
+                # «3/8» a tamaño normal se lee bien y se acepta; lo ideal sigue siendo la fracción apilada.
+                self.r.error(18, donde, f"«{recorte(texto, j, k + 1, 6)}» es una fracción con el numerador o el "
+                                        "denominador en superíndice o subíndice, y se imprime diminuta. "
+                                        "Escríbela apilada con el editor de ecuaciones de Word (Insertar › "
+                                        "Ecuación), o a tamaño normal: «3/8».")
                 break
         raiz = texto.find("√")
         if raiz >= 0:

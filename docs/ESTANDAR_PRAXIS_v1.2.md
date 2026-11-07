@@ -805,18 +805,17 @@ Las escrituras legítimas que cumplen ese patrón (`B12`, `MP3`, `COVID19`…) s
 
 ### 2.9.2 Fracciones  *(norma cambiada el 06/11/2026)*
 
-Las fracciones van **apiladas**, hechas con el editor de ecuaciones de Word: el numerador sobre la barra y el denominador debajo, como en un libro de texto.
+Lo que decide es que **la fracción se lea con claridad**. La forma preferida es **apilada**, hecha con el editor de ecuaciones de Word: el numerador sobre la barra y el denominador debajo, como en un libro de texto. A tamaño normal con barra también se acepta, porque se lee grande y sin esfuerzo.
 
-**Queda prohibida cualquier fracción escrita con barra**, y el validador la rechaza con la regla 18:
+Lo que se rechaza, con la regla 18, es la fracción **diminuta**:
 
 | Forma | Veredicto |
 |---|---|
-| `3/8` con barra normal | rechazada |
-| `3⁄8` con barra de fracción (U+2044) o `3∕8` (U+2215) | rechazada |
-| `³/₈` con superíndice y subíndice | rechazada |
-| fracción apilada del editor de ecuaciones | **correcta** |
+| fracción apilada del editor de ecuaciones | **preferida** |
+| `3/8` a tamaño normal (con `/`, `⁄` o `∕`) | aceptada |
+| `³/₈` con numerador en superíndice o denominador en subíndice | **rechazada** |
 
-**Por qué cambió.** Hasta la v1.2 se aceptaba `³/₈` porque cabía en la columna sin alterar el interlineado. En la práctica se lee como «tres barra ocho» y no se parece a un libro de matemáticas, que es el estándar de calidad que la empresa quiere para un banco de ejercicios que se va a reutilizar durante años. El costo es que el renglón que lleva una fracción crece unos milímetros; se acepta.
+**Por qué cambió.** Hasta la v1.2 el estándar *exigía* `³/₈`, por caber en la columna sin alterar el interlineado. Impresa a 9 pt, esa fracción sale tan pequeña que cuesta leerla, y en un banco de ejercicios que se va a reutilizar durante años eso no compensa. La apilada cuesta unos milímetros de alto de renglón y se acepta ese costo; la escrita a tamaño normal no cuesta nada y también vale.
 
 Siguen escribiéndose como texto normal, porque no son fracciones:
 
@@ -1937,7 +1936,7 @@ Además, las preguntas 74, 75 y 76 no traen DBA mientras que la 69 sí.
 
 - 112 superíndices/subíndices de texto: **correcto**, es el estándar adoptado.
 - Solo 2 ecuaciones OMML en 140 preguntas: consistente con la regla de usar el editor solo para lo estructural.
-- Las fracciones están en línea con superíndice y subíndice: se adoptó como estándar en la v1.2 y **se revocó el 06/11/2026**; ahora van apiladas (ver 2.9.2).
+- Las fracciones están en línea con superíndice y subíndice: se adoptó como estándar en la v1.2 y **se revocó el 06/11/2026** por ilegible; ahora van apiladas o a tamaño normal (ver 2.9.2).
 
 ## 6.9 Lo que ya está bien y se conserva
 

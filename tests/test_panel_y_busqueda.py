@@ -400,7 +400,8 @@ def test_el_prompt_manda_escribir_las_matematicas_con_el_editor_de_ecuaciones(c)
     assert "Insertar › Ecuación" in t or "Insertar > Ecuación" in t
     for caso in ("Fracciones", "Raíces", "Números mixtos"):
         assert caso in t, f"el prompt no dice qué hacer con: {caso}"
-    assert "nunca" in t.lower() and "3/8" in t                 # el error concreto, con su ejemplo
+    assert "se acepta" in t and "3/8" in t                     # a tamaño normal sí vale
+    assert "se rechaza" in t and "³/₈" in t                    # la diminuta no
     assert "libro de texto" in t                               # el objetivo, dicho en una línea
     assert "H₂O" in t and "m²" in t                            # lo que va con superíndice, sin editor
     assert "como imagen" in t                                  # una fórmula nunca es una captura

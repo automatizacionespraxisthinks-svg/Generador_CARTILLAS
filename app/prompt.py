@@ -194,13 +194,22 @@ libro de texto**: las fracciones apiladas, las raíces con su signo y su barra, 
 En Word: **Insertar › Ecuación** (o Alt + «=»). La ecuación va **en la misma línea del texto**, nunca como
 imagen aparte ni como captura de pantalla.
 
-**El validador lo exige: un archivo con «3/8», «³/₈», «√49» o «x^2» se RECHAZA** y no entra al banco.
+**El validador lo exige: un archivo con «³/₈», «√49» o «x^2» se RECHAZA** y no entra al banco.
 Arréglalo **antes** de subirlo, no después.
+
+**Las fracciones.** Lo que importa es que se lean con claridad:
+
+| Cómo la escribes | Qué pasa |
+|---|---|
+| apilada, con el editor de ecuaciones: el 3 sobre el 8 | **así es como la quiero** |
+| «3/8» a tamaño normal | se acepta: se lee grande y sin esfuerzo |
+| «³/₈» con el numerador arriba pequeño y el denominador abajo pequeño | **se rechaza**: sale diminuta |
+
+Dentro de una expresión más larga (una ecuación, una fracción dentro de otra, una potencia de una
+fracción) la fracción va **siempre apilada**: con barra no se entendería dónde empieza y dónde termina.
 
 **Va con el editor de ecuaciones, siempre:**
 
-- Fracciones: tres octavos va **apilado**, el 3 sobre el 8. No vale «3/8», ni «3⁄8» con la barra de
-  fracción, ni «³/₈» con superíndice y subíndice: las tres se imprimen en línea y no parecen un libro.
 - Raíces: **nunca** «√25» con el carácter suelto; la raíz lleva su barra sobre todo el radicando, y la
   raíz cúbica o enésima lleva su índice.
 - Números mixtos: dos y un cuarto se escribe con la fracción apilada al lado del entero.
@@ -388,7 +397,7 @@ Antes de darme cada archivo, repásalo contra las reglas del punto 2 y las de lo
 
 1.  Cuatro opciones A, B, C y D, cada una en su párrafo, ninguna dependiente de otra.
 2.  El enunciado no empieza por un número y su último párrafo termina en «?».
-3.  Ninguna fracción con barra, ninguna «√» suelta, ningún «^»: todo con el editor de ecuaciones.
+3.  Ninguna fracción diminuta («³/₈»), ninguna «√» suelta, ningún «^».
 4.  La misma expresión escrita igual en el enunciado y en las cuatro opciones.
 5.  Los tres rótulos de tabla escritos tal cual, con los encabezados exactos y las columnas N° y Preg. vacías.
 6.  La justificación no nombra ninguna letra.

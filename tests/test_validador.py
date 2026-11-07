@@ -354,30 +354,24 @@ def test_superindice_no_aplica_en_lengua():
     assert 18 not in reglas(validar_doc(doc))
 
 
-def test_fraccion_en_texto_plano():
-    doc = Document(SUELTO)
-    p = parrafo_con(doc, "B. ")
-    p.runs[-1].text = "3/4"
-    assert 18 in reglas(validar_doc(doc))
-
-
 @pytest.mark.parametrize("barra", ["/", "⁄", "∕"])
-def test_la_fraccion_con_cualquier_barra_se_rechaza(barra):
-    """Word ofrece tres barras que a simple vista son iguales; ninguna hace una fracción de libro."""
+def test_la_fraccion_a_tamano_normal_se_acepta(barra):
+    """«3/4» a tamaño normal se lee grande y claro: se acepta, con cualquiera de las tres barras de Word."""
     doc = Document(SUELTO)
     p = parrafo_con(doc, "B. ")
     p.runs[-1].text = f"3{barra}4"
-    assert 18 in reglas(validar_doc(doc))
+    assert 18 not in reglas(validar_doc(doc))
 
 
-def test_la_fraccion_con_superindice_y_subindice_ya_no_basta():
-    """Desde el 06/11/2026 la norma pide la fracción APILADA: ³/₄ se imprime en línea, no como un libro."""
+@pytest.mark.parametrize("arriba,abajo", [(True, False), (False, True)])
+def test_la_fraccion_en_superindice_o_subindice_se_rechaza(arriba, abajo):
+    """³/₄ se imprime diminuta y cuesta leerla; es el formato que la v1.2 pedía y que se revocó."""
     doc = Document(SUELTO)
     p = parrafo_con(doc, "B. ")
     p.runs[-1].text = ""
-    for texto, arriba, abajo in (("3", True, False), ("/", False, False), ("4", False, True)):
+    for texto, sup, sub in (("3", arriba, abajo), ("/", False, False), ("4", False, False)):
         r = p.add_run(texto)
-        r.font.superscript, r.font.subscript = arriba, abajo
+        r.font.superscript, r.font.subscript = sup, sub
         r.font.name, r.font.size = "Tahoma", Pt(9)
     assert 18 in reglas(validar_doc(doc))
 

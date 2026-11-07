@@ -17,6 +17,15 @@ RAIZ = Path(__file__).resolve().parent.parent
 ESPERA = 180          # segundos; abrir Word y repaginar toma unos pocos
 
 
+def hay_word():
+    """¿Puede este equipo contar las páginas?
+
+    En el servidor (Linux) no hay Microsoft Word ni las fuentes Tahoma y Cambria Math, así que ningún
+    programa daría el mismo número de páginas que al imprimir. Allí no se cuenta: se anota a mano.
+    """
+    return os.environ.get("PRAXIS_SIN_WORD") != "1"
+
+
 def faltan_para_multiplo(paginas, multiplo=4):
     """Páginas que faltan para el siguiente múltiplo (0 si ya lo es)."""
     if not paginas:

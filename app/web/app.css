@@ -208,6 +208,9 @@ math.ecuacion mfrac{padding:0 2px}
 .hoja-previa .glosario{font-size:10.5px}
 .hoja .glosario{font-size:12px;border-left:2px solid var(--linea-2);padding-left:8px;margin-top:4px}
 .paginas{margin-top:10px;padding:10px 12px;background:var(--fondo);border:1px solid var(--linea);border-radius:10px;font-size:14px}
+/* casilla para anotar a mano las páginas, donde no hay Word para contarlas */
+.paginas-mano{display:inline-flex;gap:6px;align-items:center;margin-left:4px;white-space:nowrap}
+.paginas-mano input{width:88px;padding:5px 8px;font:inherit;font-size:14px;border:1px solid var(--linea-2);border-radius:7px}
 .paginas b{font-variant-numeric:tabular-nums}
 .casilla{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;cursor:pointer}
 .casilla input{flex:none;margin-top:3px;width:18px;height:18px;accent-color:var(--verde)}

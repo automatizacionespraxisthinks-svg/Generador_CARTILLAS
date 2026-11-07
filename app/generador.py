@@ -1262,8 +1262,15 @@ def generar(cid, nombre_archivo=None):
                 "verificacion": [p["texto"] for p in pruebas]}
 
 
-def contar_paginas(cid):
-    """Vuelve a contar las páginas del Word guardado (por ejemplo, si Word no estaba disponible al generar)."""
+MAX_PAGINAS = 400           # una cartilla de 140 preguntas ronda las 30; más que esto es un error de dedo
+
+
+def contar_paginas(cid, a_mano=None):
+    """Las páginas del Word guardado.
+
+    `a_mano`: el número que la persona leyó en Word. En el servidor no hay Word ni las fuentes de la
+    cartilla, así que contar allí daría un número distinto al de la impresión; se anota y listo.
+    """
     with Sesion() as s:
         c = s.get(Cartilla, cid)
         if c is None:
@@ -1271,7 +1278,16 @@ def contar_paginas(cid):
         a = s.scalar(select(CartillaArchivo).where(CartillaArchivo.cartilla_id == cid, CartillaArchivo.tipo == "docx"))
         if a is None:
             raise ErrorGeneracion("La cartilla no tiene Word guardado: genérala primero.")
-        c.paginas = paginas.contar(a.datos)
+        if a_mano is not None:
+            try:
+                n = int(a_mano)
+            except (TypeError, ValueError):
+                raise ErrorGeneracion("Escribe el número de páginas que ves en Word.")
+            if not 1 <= n <= MAX_PAGINAS:
+                raise ErrorGeneracion(f"El número de páginas tiene que estar entre 1 y {MAX_PAGINAS}.")
+            c.paginas = n
+        else:
+            c.paginas = paginas.contar(a.datos)
         s.commit()
         return {"paginas": c.paginas, "faltan_paginas": paginas.faltan_para_multiplo(c.paginas)}
 

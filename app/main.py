@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app import armado, banco, cuadernillo, estadisticas, generador, maqueta, prompt
+from app import armado, banco, cuadernillo, estadisticas, generador, maqueta, paginas, prompt
 from app.bd import (Agrupacion, Archivo, CargaPendiente, Ejercicio, Estructura, ExcepcionSuperindice, FraseProhibida, Grado,
                     Materia, Plantilla, Sesion, TipoMaterial)
 from app.config import PLANTILLAS, WEB
@@ -252,7 +252,8 @@ def _armado(fn, *a, **kw):
 
 @app.get("/api/cartillas/opciones")
 def api_cartillas_opciones():
-    return armado.opciones_para_crear()
+    # «hay_word»: en el servidor no hay, y la pantalla pide el número de páginas en vez de contarlas
+    return {**armado.opciones_para_crear(), "hay_word": paginas.hay_word()}
 
 
 @app.get("/api/cartillas")
@@ -400,9 +401,10 @@ def api_cartilla_maquetacion(cid: int):
 
 
 @app.post("/api/cartillas/{cid}/paginas")
-def api_cartilla_paginas(cid: int):
+def api_cartilla_paginas(cid: int, cuerpo: dict = Body(default={})):
+    """Cuenta las páginas con Word, o guarda el número que la persona leyó en Word («paginas»)."""
     try:
-        r = generador.contar_paginas(cid)
+        r = generador.contar_paginas(cid, cuerpo.get("paginas"))
     except generador.ErrorGeneracion as e:
         raise HTTPException(400, str(e))
     if r is None:

@@ -236,3 +236,27 @@ def test_completar_el_texto_numera_los_espacios(c):
     recurso = next(t for t in textos if "lake" in t)
     assert "(#1)" not in recurso and "(1)" in recurso and "(3)" in recurso
     assert "______" in recurso
+
+
+def test_las_paginas_se_pueden_anotar_a_mano_donde_no_hay_word(c):
+    """En el servidor no hay Word ni las fuentes de la cartilla: contar allí daría otro número."""
+    d = armar(c, {"MATEMÁTICAS I": 4}, version=61)
+    assert generar(c, d["id"]).status_code == 200
+    cid = d["id"]
+    r = c.post(f"/api/cartillas/{cid}/paginas", json={"paginas": 26})
+    assert r.status_code == 200, r.json()
+    assert (r.json()["paginas"], r.json()["faltan_paginas"]) == (26, 2)
+    assert c.get(f"/api/cartillas/{cid}").json()["paginas"] == 26
+
+    # ya múltiplo de 4
+    assert c.post(f"/api/cartillas/{cid}/paginas", json={"paginas": 28}).json()["faltan_paginas"] == 0
+
+    # y no se traga cualquier cosa
+    for malo in (0, -3, 5000, "muchas"):
+        r = c.post(f"/api/cartillas/{cid}/paginas", json={"paginas": malo})
+        assert r.status_code == 400, f"aceptó {malo!r}"
+
+
+def test_la_pantalla_sabe_si_este_equipo_puede_contar_paginas(c):
+    """La pantalla ofrece contar o pedir el número según dónde esté corriendo el sistema."""
+    assert c.get("/api/cartillas/opciones").json()["hay_word"] is False      # las pruebas corren sin Word

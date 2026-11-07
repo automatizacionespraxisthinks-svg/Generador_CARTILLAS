@@ -567,7 +567,9 @@ async function descargarCuadernillo() {
     const paginas = r.headers.get("X-Praxis-Paginas"), faltan = r.headers.get("X-Praxis-Faltan");
     aviso.textContent = `Descargado: ${nombre}.` + (paginas
       ? ` ${paginas} páginas${faltan && faltan !== "0" ? `, faltan ${faltan} para el múltiplo de 4.` : ", múltiplo de 4."}`
-      : " No se pudieron contar las páginas (Word no estaba disponible).");
+      : (OPC && OPC.hay_word === false
+          ? " Este servidor no tiene Word, así que no cuenta las páginas: ábrelo en Word y mira el total abajo a la izquierda. Para imprimir tipo folleto tiene que ser múltiplo de 4."
+          : " No se pudieron contar las páginas: Word no respondió."));
   } catch (err) {
     aviso.textContent = "No se pudo armar el cuadernillo: " + err.message;
   } finally {
@@ -1034,8 +1036,17 @@ function vistaRevision(c) {
         ${generada && c.archivos.length ? `<div class="paginas">
           ${c.paginas ? `<b>${c.paginas} página${c.paginas === 1 ? "" : "s"}</b> · ${c.faltan_paginas
               ? `faltan <b>${c.faltan_paginas}</b> para el múltiplo de 4 (${c.paginas + c.faltan_paginas}). El ajuste se hace en el Word: agrega bloques del cierre o un salto de página; nunca se quitan preguntas.`
-              : "ya es múltiplo de 4: lista para imprimir tipo folleto."}`
-            : `No se pudieron contar las páginas (Word no respondió). <button type="button" class="mini" id="btn-paginas">Contar páginas</button>`}
+              : "ya es múltiplo de 4: lista para imprimir tipo folleto."}${
+              OPC && OPC.hay_word === false
+                ? ` <button type="button" class="mini" id="btn-cambiar-paginas">Cambiar</button>` : ""}`
+            : OPC && OPC.hay_word === false
+              ? `Este servidor no tiene Microsoft Word, así que no puede contar las páginas: cualquier otro
+                 programa daría un número distinto al de la impresión.
+                 <b>Abre el Word descargado y escribe aquí cuántas páginas tiene</b>, y el sistema te dice
+                 cuántas faltan para el múltiplo de 4.
+                 <span class="paginas-mano"><input type="number" id="n-paginas" min="1" max="400" inputmode="numeric" placeholder="Ej.: 28">
+                 <button type="button" class="mini" id="btn-anotar-paginas">Anotar</button></span>`
+              : `No se pudieron contar las páginas: Word no respondió. <button type="button" class="mini" id="btn-paginas">Contar páginas</button>`}
         </div>` : ""}
         ${generada && !c.archivos.length ? '<p class="err">Cambiaste el glosario después de generar: pulsa «Generar de nuevo» para descargar el Word y el Excel actualizados.</p>' : ""}
         ${generada && c.archivos.length ? '<p class="guardado">Cartilla generada. El Word es editable: puedes ajustar el logo, el vocabulario o el relleno, pero no cambies el orden de preguntas u opciones.</p>' : ""}
@@ -1156,11 +1167,34 @@ document.addEventListener("click", async e => {
     pag.disabled = true;
     pag.textContent = "Contando…";
     try {
-      const r = await api(`/api/cartillas/${CART.id}/paginas`, {method: "POST"});
+      const r = await api(`/api/cartillas/${CART.id}/paginas`, {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
       CART = r.cartilla;
       pintarEditor();
       if (!r.paginas) $("#g-error").textContent = "Word no respondió. Revisa que Microsoft Word esté instalado y vuelve a intentar.";
     } catch (err) { $("#g-error").textContent = JSON.parse(err.message).detail || err.message; pag.disabled = false; pag.textContent = "Contar páginas"; }
+    return;
+  }
+  if (e.target.closest("#btn-cambiar-paginas")) {
+    CART = {...CART, paginas: null, faltan_paginas: null};   // solo en pantalla: vuelve a salir la casilla
+    pintarEditor();
+    return;
+  }
+  const anotar = e.target.closest("#btn-anotar-paginas");
+  if (anotar) {
+    // sin Word no se puede contar: se anota lo que la persona ve abierto en Word
+    const n = Number(($("#n-paginas") || {}).value);
+    if (!n) { $("#g-error").textContent = "Escribe cuántas páginas tiene el Word."; return; }
+    anotar.disabled = true;
+    try {
+      const r = await api(`/api/cartillas/${CART.id}/paginas`, {
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({paginas: n})});
+      CART = r.cartilla;
+      $("#g-error").textContent = "";
+      pintarEditor();
+    } catch (err) {
+      $("#g-error").textContent = JSON.parse(err.message).detail || err.message;
+      anotar.disabled = false;
+    }
     return;
   }
   const gen = e.target.closest("#btn-generar");

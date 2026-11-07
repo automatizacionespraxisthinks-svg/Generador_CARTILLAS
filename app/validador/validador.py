@@ -65,6 +65,26 @@ RE_JUST_LETRA = [
     RE_LETRAS_UNIDAS,
 ]
 RE_LETRA_PARENTESIS = re.compile(r"(?<![\w(])[A-D]\)")
+def _canales(color):
+    """(r, g, b) de un color de Word, o None si es «auto», un nombre de tema o algo que no se entiende."""
+    c = (color or "").strip().lstrip("#").upper()
+    if len(c) != 6 or any(x not in "0123456789ABCDEF" for x in c):
+        return None
+    return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def casi_blanco(color, umbral=0xE8):
+    """¿Ese texto se perdería sobre el papel blanco?"""
+    rgb = _canales(color)
+    return rgb is not None and min(rgb) >= umbral
+
+
+def casi_negro(color, umbral=0x40):
+    """¿Ese fondo dejaría el texto negro ilegible?"""
+    rgb = _canales(color)
+    return rgb is not None and max(rgb) <= umbral
+
+
 DIGITOS = set("0123456789")   # «²» o «₅» ya son superíndice/subíndice: no cuentan
 RE_POTENCIA_TEXTO = re.compile(r"\^\s*[-−]?\d|\*\*\s*[-−]?\d")   # x^2, 2**3: se escriben con superíndice
 # la barra normal y las dos «barras de fracción» de Word, que a simple vista son iguales
@@ -764,10 +784,11 @@ class Validador:
                     self.r.error(20, donde, f"Tiene texto oculto: «{recorte(f.texto, 0, 30)}». Elimínalo.")
                 if f.fmt.resaltado and f.fmt.resaltado != "none" or (f.fmt.sombreado and f.fmt.sombreado.upper() not in ("AUTO", "FFFFFF")):
                     self.r.error(20, donde, f"Tiene texto resaltado o sombreado: «{recorte(f.texto, 0, 30)}». Quita el resaltado.")
-                tema = (f.fmt.color_tema or "").lower()
-                color = (f.fmt.color or "auto").upper()
-                if f.fmt.color_variado or (tema and tema not in ("text1", "dark1")) or (not tema and color not in ("AUTO", "000000")):
-                    self.r.error(20, donde, f"Tiene texto de color: «{recorte(f.texto, 0, 30)}». Todo el texto va en negro.")
+                # Desde el 07/11/2026 el texto SÍ puede ir en color: hay ejercicios que lo necesitan.
+                # Lo único que se sigue rechazando es el casi blanco, que sobre el papel no se ve.
+                if casi_blanco(f.fmt.color):
+                    self.r.error(20, donde, f"Tiene texto casi blanco: «{recorte(f.texto, 0, 30)}» en "
+                                            f"{f.fmt.color}. Sobre el papel no se vería.")
 
     def revisar_notacion(self, p, donde, aplica_superindice):
         chars = texto_con_nivel(p)
@@ -923,10 +944,9 @@ class Validador:
         tiene_alfa = im.mode in ("RGBA", "LA", "PA") or "transparency" in im.info
         if tiene_alfa and im.convert("RGBA").getchannel("A").getextrema()[0] < 255:
             self.r.error(25, donde, "La imagen tiene transparencia. Debe tener fondo blanco sin transparencia.")
-        if im.mode not in ("L", "1", "LA", "I", "I;16"):
-            rgb = im.convert("RGB")
-            if ImageChops.difference(rgb, rgb.convert("L").convert("RGB")).getbbox() is not None:
-                self.r.error(25, donde, "La imagen tiene color. Debe estar en escala de grises o blanco y negro.")
+        # Desde el 07/11/2026 las imágenes PUEDEN ir en color: mapas, banderas, reacciones químicas y
+        # cualquier ejercicio donde el color sea parte de lo que se evalúa. Esas cartillas se imprimen
+        # a color. Lo demás —PNG, 300 ppp, sin transparencia ni efectos— no cambia.
 
     def revisar_tabla(self, t, donde):
         tbl = t.el
@@ -957,18 +977,22 @@ class Validador:
                 for b in capa:
                     bordes[b.tag.split("}")[1]] = b
         def borde_ok(b):
-            return (b is not None and b.get(W + "val") == "single" and b.get(W + "sz") == "4"
-                    and (b.get(W + "color") or "auto").upper() in ("AUTO", "000000"))
+            # el color del borde ya no se exige negro: desde el 07/11/2026 se admite el color
+            return b is not None and b.get(W + "val") == "single" and b.get(W + "sz") == "4"
         faltan = [lado for lado in ("top", "left", "bottom", "right", "insideH", "insideV") if not borde_ok(bordes.get(lado))]
         faltan += ["celda" for tcb in tbl.iter(W + "tcBorders") for b in tcb if not borde_ok(b)]
         if faltan:
-            self.r.error(26, donde, "Los bordes deben ser sencillos, negros y de 0,5 pt en toda la tabla.")
+            self.r.error(26, donde, "Los bordes deben ser sencillos y de 0,5 pt en toda la tabla.")
         # sombreado
         fondos = [s.get(W + "fill") for s in tbl.iter(W + "shd")]
         for st in self.doc.estilos.cadena(estilo.get(W + "val") if estilo is not None else None):
             fondos += [s.get(W + "fill") for s in st.iter(W + "shd")]
-        if any(f and f.upper() not in ("AUTO", "FFFFFF") for f in fondos):
-            self.r.error(26, donde, "La tabla tiene sombreado de color. El fondo debe ser blanco.")
+        # el sombreado de color se admite (mapas de calor, celdas resaltadas); lo que no, es el negro
+        # o casi negro, que deja el texto ilegible sobre el papel
+        oscuros = [f for f in fondos if f and casi_negro(f)]
+        if oscuros:
+            self.r.error(26, donde, f"La tabla tiene celdas de fondo casi negro ({oscuros[0]}): el texto "
+                                    "no se leería. Usa un color claro.")
         # alineación vertical centrada
         celdas = [tc for tcs in t.tcs for tc in tcs]
         if any((tc.find("w:tcPr/w:vAlign", NS) is None or tc.find("w:tcPr/w:vAlign", NS).get(W + "val") != "center") for tc in celdas):

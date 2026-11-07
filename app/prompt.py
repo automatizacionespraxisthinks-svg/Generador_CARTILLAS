@@ -271,8 +271,12 @@ la que está. No la agrandes a mano ni le cambies la fuente; si lo haces, se pie
 - Nítidas y con el texto legible **a 8,4 cm de ancho**, que es el ancho de una columna. Si es una gráfica
   con rótulos diminutos, no sirve: hay que rehacerla.
 - Sin marcas de agua, sin bordes blancos sobrantes, sin capturas de pantalla con el fondo de la ventana.
-- En blanco y negro o en gris: **la cartilla se imprime en blanco y negro**. Si la respuesta depende del
-  color («el punto rojo»), la pregunta no sirve; usa formas, tramas o rótulos.
+- **El color se admite** desde el 07/11/2026, en las imágenes, en el texto y en las celdas de una tabla.
+  Úsalo cuando el ejercicio lo necesite —banderas, mapas, reacciones químicas, gráficas de varias
+  series—, porque esas cartillas se mandan a imprimir a color. Si el color no aporta nada, déjalo en
+  gris: sale más barato de imprimir.
+- Lo único que no vale es lo que no se vería sobre el papel: **texto casi blanco** y **celdas casi
+  negras**. Y el **resaltado** de Word sigue prohibido: es una marca de trabajo, no contenido.
 - Una sola imagen por párrafo, centrada y en línea con el texto.
 
 **Las tablas**

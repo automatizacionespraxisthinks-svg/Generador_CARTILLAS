@@ -457,8 +457,12 @@ def test_el_prompt_pide_la_tematica_explicada(c):
 
 
 def test_el_prompt_cubre_la_presentacion_y_las_opciones_con_figura(c):
-    t = c.get("/api/prompt").json()["texto"]
-    assert "blanco y negro" in t                               # la cartilla no se imprime a color
+    import re
+
+    # el prompt va con saltos de línea: se comparan frases sin importar dónde corte la línea
+    t = re.sub(r"\s+", " ", c.get("/api/prompt").json()["texto"])
+    assert "El color se admite" in t                           # desde el 07/11/2026
+    assert "casi blanco" in t and "casi negras" in t           # lo único que se sigue rechazando
     assert "8,4 cm" in t                                       # el ancho real de una columna
     assert "Tabla con cuadrícula" in t                         # el estilo de tabla que el sistema espera
     assert "mismo párrafo" in t and "letra" in t               # la opción que es una figura

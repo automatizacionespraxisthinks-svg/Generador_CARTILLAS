@@ -342,6 +342,11 @@ def fijar_formato_runs(p, estilos, sid, tbl_sid=None):
             rpr.append(_el("w:vertAlign", **{"w:val": fmt.vert}))
         if fmt.subrayado and fmt.subrayado != "none":
             rpr.append(_el("w:u", **{"w:val": fmt.subrayado}))
+        # el color del archivo de carga se conserva: desde el 07/11/2026 hay ejercicios que lo necesitan.
+        # Va explícito, porque el estilo del que venía ya se quitó más arriba.
+        color = (fmt.color or "").strip().lstrip("#").upper()
+        if len(color) == 6 and color != "000000" and all(c in "0123456789ABCDEF" for c in color):
+            rpr.append(_el("w:color", **{"w:val": color}))
         _ordenar(rpr, ORDEN_RPR)
     return p
 

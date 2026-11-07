@@ -439,10 +439,22 @@ def test_tamano_10_pt():
     assert 23 in reglas(validar_doc(doc))
 
 
-def test_texto_de_color_y_resaltado():
+def test_el_texto_de_color_se_admite():
+    """Desde el 07/11/2026 hay ejercicios que necesitan color, y esas cartillas se imprimen a color."""
     doc = Document(SUELTO)
-    parrafo_con(doc, "Camila compra").runs[0].font.color.rgb = RGBColor(0x1F, 0x3A, 0x68)
+    parrafo_con(doc, "Camila compra").runs[0].font.color.rgb = RGBColor(0xC0, 0x00, 0x00)
+    assert 20 not in reglas(validar_doc(doc))
+
+
+def test_el_texto_casi_blanco_se_sigue_rechazando():
+    """Sobre el papel no se vería: es un error de quien lo escribió, no una decisión de diseño."""
+    doc = Document(SUELTO)
+    parrafo_con(doc, "Camila compra").runs[0].font.color.rgb = RGBColor(0xFA, 0xFA, 0xFA)
     assert 20 in reglas(validar_doc(doc))
+
+
+def test_el_resaltado_sigue_prohibido():
+    """Resaltar es una marca de trabajo, no contenido: en la cartilla impresa no pinta nada."""
     doc = Document(SUELTO)
     parrafo_con(doc, "Camila compra").runs[0].font.highlight_color = WD_COLOR_INDEX.YELLOW
     assert 20 in reglas(validar_doc(doc))
@@ -476,7 +488,6 @@ def test_imagen_correcta(tmp_path):
 @pytest.mark.parametrize("ancho_px,ancho_cm,color,alfa", [
     (1100, 9.0, False, False),     # más de 8,4 cm
     (400, 7.5, False, False),      # menos de 300 ppp
-    (900, 7.5, True, False),       # tiene color
     (900, 7.5, True, True),        # tiene transparencia
 ])
 def test_imagenes_rechazadas(tmp_path, ancho_px, ancho_cm, color, alfa):
@@ -599,7 +610,7 @@ def test_completar_texto_sin_credito_con_marcadores():
     assert 19 in reglas(validar_doc(doc))
 
 
-def test_color_de_tema_aclarado_es_color():
+def test_el_color_de_tema_tambien_se_admite():
     doc = Document(SUELTO)
     r = parrafo_con(doc, "Camila compra").runs[0]
     c = OxmlElement("w:color")
@@ -607,7 +618,7 @@ def test_color_de_tema_aclarado_es_color():
     c.set(qn("w:themeColor"), "text1")
     c.set(qn("w:themeTint"), "7F")
     r._r.get_or_add_rPr().append(c)
-    assert 20 in reglas(validar_doc(doc))
+    assert 20 not in reglas(validar_doc(doc))
 
 
 def test_negrita_alternante_entre_estilo_de_parrafo_y_de_caracter():
@@ -701,3 +712,32 @@ def test_tematicas_distintas_no_preguntan(registrada, nueva):
     r = validar_doc(doc, cat)
     assert r.estado == ACEPTADO, [(s.valor, s.parecido_a) for s in r.similitudes]
     assert r.filas[0]["tematica"] == nueva
+
+
+def test_la_imagen_a_color_se_admite(tmp_path):
+    """Mapas, banderas, reacciones químicas: hay ejercicios donde el color es parte de la pregunta."""
+    doc = Document(SUELTO)
+    insertar_imagen(doc, png(tmp_path / "c.png", 900, color=True), 7.5)
+    r = validar_doc(doc)
+    assert r.estado == ACEPTADO, [(m.regla, m.mensaje) for m in r.errores]
+
+
+def test_la_tabla_con_celdas_de_color_se_admite():
+    doc = Document(SUELTO)
+    t = doc.tables[0]                            # la tabla del enunciado
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:fill"), "FFF2CC")              # amarillo claro
+    t.cell(1, 1)._tc.get_or_add_tcPr().append(shd)
+    assert 26 not in reglas(validar_doc(doc))
+
+
+def test_la_celda_casi_negra_se_rechaza():
+    """El texto va en negro: sobre un fondo casi negro no se leería."""
+    doc = Document(SUELTO)
+    t = doc.tables[0]                            # la tabla del enunciado
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:fill"), "1A1A1A")
+    t.cell(1, 1)._tc.get_or_add_tcPr().append(shd)
+    assert 26 in reglas(validar_doc(doc))

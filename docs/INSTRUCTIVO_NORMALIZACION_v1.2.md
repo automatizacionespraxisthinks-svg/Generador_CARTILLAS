@@ -63,7 +63,7 @@ Los rótulos `TABLA DE RESPUESTAS`, `TABLA DE EXCEL` y `TABLA DE GLOSARIO` van e
 - Fuente **Tahoma** en todo el texto (solo las ecuaciones del editor van en Cambria Math). Los símbolos (θ, π, ≤, →) se escriben en Tahoma, no con Insertar › Símbolo en la fuente Symbol
 - Guarda como «Documento de Word (.docx)», no como «Documento Open XML strict»
 - **9 pt** en el texto; **8 pt** solo dentro de tablas, en la línea de crédito y en el pie de una imagen
-- Texto **negro**. Ningún otro color
+- Texto en **negro**, salvo que el ejercicio necesite color: desde el 07/11/2026 se admite (no el casi blanco)
 - Sin resaltado, sin comentarios, sin control de cambios, sin texto oculto
 - Sin viñetas ni numeración automática de Word: si hace falta numerar, escribe `I.`, `1.` o `•` como texto
 - El espaciado entre párrafos no importa: lo pone el sistema
@@ -102,7 +102,7 @@ Los rótulos `TABLA DE RESPUESTAS`, `TABLA DE EXCEL` y `TABLA DE GLOSARIO` van e
 - Trabaja siempre sobre las plantillas: ya traen activada la opción «No comprimir las imágenes del archivo». Si empiezas un Word desde cero, actívala en Archivo › Opciones › Avanzadas › Tamaño y calidad de la imagen; si no, Word reduce las imágenes a 220 ppp al guardar y el archivo se rechaza
 - Ancho máximo **8,4 cm** en el Word
 - Resolución mínima **300 ppp** al tamaño en que quedó (por ejemplo, una imagen de 8,4 cm necesita al menos 993 píxeles de ancho)
-- **Escala de grises** real (sin ningún píxel de color), fondo blanco, **sin transparencia**
+- **Color libre** desde el 07/11/2026 (esas cartillas se imprimen a color), fondo blanco, **sin transparencia**
 - Sin sombras, efectos artísticos, bordes ni marcos de Word
 - Sin cuadros de texto, formas ni lienzos de dibujo: los rótulos van dentro del PNG
 - En el enunciado o en el recurso, la imagen va sola en su párrafo, centrada
@@ -191,13 +191,13 @@ Para explicar palabras difíciles de una pregunta. Solo se imprime si la cartill
 Lo que el sistema rechaza:
 
 - ¿Quedó algún número de pregunta escrito a mano?
-- ¿Quedó algún corchete, nota, resaltado, comentario o texto de color?
+- ¿Quedó algún corchete, nota, resaltado o comentario? (el color sí se admite)
 - ¿Cada pregunta tiene exactamente cuatro opciones, cada una en un solo párrafo?
 - ¿Coinciden la `Clave` y la columna `Correcta`?
 - ¿Tiene la TABLA DE EXCEL las 10 columnas, con el Grado lleno?
 - ¿Tiene el bloque su línea de crédito?
 - En «completar el texto», ¿están los marcadores `(#1)` a `(#k)` completos y en orden?
-- ¿Alguna imagen pasa de 8,4 cm, es flotante, tiene color o transparencia?
+- ¿Alguna imagen pasa de 8,4 cm, es flotante o tiene transparencia? (el color sí se admite)
 - ¿Quedó algún `x2` sin superíndice o `3/4` en texto plano?
 - ¿Menciona la justificación alguna letra de opción?
 - ¿Quedó alguna referencia a otro número de ejercicio?

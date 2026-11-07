@@ -604,3 +604,45 @@ def test_la_verificacion_lee_las_opciones_que_son_imagenes():
     leidas = _leer_cartilla_generada(buf.getvalue())
     assert [(q["numero"], q["opciones"]) for q in leidas] == [
         (12, ["A", "B", "C", "D"]), (13, ["A", "B", "C", "D"])]
+
+
+def test_el_color_del_ejercicio_llega_a_la_cartilla(c, tmp_path):
+    """No basta con admitirlo al subir: el generador borraba el color de cada run al copiarlo."""
+    import io
+    import re
+
+    from docx import Document
+    from docx.shared import RGBColor
+
+    from app.generador import W
+    from tests.fabrica import ejercicio
+
+    nombre, datos = ejercicio("Banderas de América", grado="77", materia="Ciencias Sociales",
+                              submateria="", pensamiento="Pensamiento social", dba="DBA 2",
+                              competencia="Interpretación y análisis de perspectivas", clave="B",
+                              variante="color")
+    doc = Document(io.BytesIO(datos))
+    objetivo = next(p for p in doc.paragraphs if p.text.startswith("A. "))
+    objetivo.runs[-1].font.color.rgb = RGBColor(0xC0, 0x00, 0x00)     # rojo
+    buf = io.BytesIO()
+    doc.save(buf)
+
+    r = c.post("/api/cargar", files=[("archivos", (nombre, buf.getvalue()))],
+               data={"solo_revisar": "false"}).json()[0]
+    assert r["estado"] == "aceptado", r.get("errores")
+
+    d = c.post("/api/cartillas", json={"grado": "77", "estructura": "E4", "tipo_material": "55",
+                                       "plantilla": 1, "codigo_materia": "04", "institucion": "Color",
+                                       "nombre": "COLOR", "simulacro_n": 8, "version": 40}).json()
+    cid = d["id"]
+    sec = c.put(f"/api/cartillas/{cid}/secciones", json={"secciones": [
+        {"titulo": "CIENCIAS SOCIALES", "materia": "Ciencias Sociales", "submateria": "", "cantidad": 1,
+         "dificultad": "lib"}]}).json()["secciones"][0]
+    cand = c.get(f"/api/cartillas/{cid}/candidatos", params={"seccion": sec["id"]}).json()["items"]
+    elegido = next(x for x in cand if x["tematica"] == "Banderas de América")
+    c.post(f"/api/cartillas/{cid}/items", json={"seccion": sec["id"], "ejercicio": elegido["id"]})
+    assert c.post(f"/api/cartillas/{cid}/generar", json={}).status_code == 200
+
+    word = c.get(f"/api/cartillas/{cid}/archivo/docx").content
+    colores = set(re.findall(r'<w:color w:val="([0-9A-Fa-f]{6})"', Document(io.BytesIO(word)).element.body.xml))
+    assert "C00000" in {x.upper() for x in colores}, f"el rojo no llegó a la cartilla: {colores}"

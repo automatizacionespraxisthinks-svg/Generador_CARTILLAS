@@ -521,7 +521,7 @@ La carga masiva se hace subiendo varios archivos `.docx` a la vez.
 | Interlineado | Sencillo |
 | Estilo de párrafo | Sin espaciado |
 | Alineación | **Justificada** (así viene el estilo Normal de las plantillas v1.2). Izquierda, centrada o derecha solo donde el autor la aplique a mano: se conserva en la cartilla (3.5B) |
-| Color del texto | Negro (automático). Cualquier otro color se rechaza |
+| Color del texto | Libre desde el 07/11/2026. Solo se rechaza el casi blanco, que sobre el papel no se ve |
 
 > El espaciado entre párrafos y los párrafos vacíos **no se validan**: el sistema los retira y aplica el espaciado propio de la cartilla. La sangría sí se conserva.
 
@@ -863,12 +863,12 @@ El validador rechaza automáticamente los archivos que contengan cualquiera de e
 | Posición | **En línea con el texto** (nunca flotante) |
 | Ancho máximo | **8,4 cm** |
 | Resolución mínima | 300 ppp al tamaño final |
-| Color | Escala de grises o blanco y negro |
+| Color | Libre desde el 07/11/2026: hay ejercicios cuya pregunta depende del color |
 | Fondo | Blanco, sin transparencia |
 
 Reglas adicionales:
 
-- Sin efectos artísticos, sombras, bordes decorativos ni marcos de Word. Estos generan archivos `.wdp` internos y oscurecen la imagen al imprimir en blanco y negro.
+- Sin efectos artísticos, sombras, bordes decorativos ni marcos de Word. Estos generan archivos `.wdp` internos y estropean la imagen al imprimir.
 - Sin cuadros de texto (`text box`) alrededor de la imagen. Las etiquetas van dentro del PNG.
 - Los rótulos dentro de la imagen deben ser legibles a 8,4 cm de ancho: mínimo 8 pt equivalente. *(No verificable por máquina: responsabilidad del autor.)*
 - En el enunciado y en el recurso, la imagen va **en párrafo propio**, centrada, sin texto en ese párrafo. En las opciones va en el párrafo de la opción (2.5).
@@ -899,7 +899,7 @@ Cómo se verifica cada regla:
 | Fuente | Tahoma 8 pt |
 | Encabezado | **Negrita** (es lo que marca que la primera fila es el encabezado). El **centrado lo aplica el sistema** al armar la cartilla |
 | Bordes | Sencillos, negros, 0,5 pt |
-| Relleno | Blanco. Sin sombreados de color |
+| Relleno | Libre desde el 07/11/2026. Solo se rechaza el casi negro, que dejaría el texto ilegible |
 | Alineación vertical | Centrada |
 | Filas | Marcar **«No dividir la fila entre páginas»** |
 
@@ -951,7 +951,7 @@ El archivo se **rechaza** si:
 17. La justificación menciona una letra de opción (2.6) o contiene imágenes.
 18. Hay `x2` sin superíndice o `3/4` en texto plano (2.9).
 19. En una parte de «completar el texto», los marcadores `(#1)`…`(#k)` no están completos y en orden (2.8B).
-20. Hay texto de trabajo: texto de plantilla entre corchetes (tres o más palabras, como `[texto de la opción]`; un intervalo como `[0, 1]` sí se permite), comentarios de Word, control de cambios, texto resaltado, texto oculto, texto de color (incluidos los colores del tema aclarados u oscurecidos), o una frase de la **lista de frases prohibidas** (editable; de fábrica, escritas exactamente así: `Qué NO debe aparecer`, `Nota para`, `NOTA:`, `TODO`, `PENDIENTE`, `REVISAR`, `BORRAR`). En minúscula son contenido legítimo («la pendiente de una recta», «una nota para aprobar»).
+20. Hay texto de trabajo: texto de plantilla entre corchetes (tres o más palabras, como `[texto de la opción]`; un intervalo como `[0, 1]` sí se permite), comentarios de Word, control de cambios, texto resaltado, texto oculto, texto casi blanco, o una frase de la **lista de frases prohibidas** (editable; de fábrica, escritas exactamente así: `Qué NO debe aparecer`, `Nota para`, `NOTA:`, `TODO`, `PENDIENTE`, `REVISAR`, `BORRAR`). En minúscula son contenido legítimo («la pendiente de una recta», «una nota para aprobar»).
 
 **Formato**
 
@@ -1075,7 +1075,7 @@ La impresión tipo revista se hace con la función **Folleto** de la impresora, 
 imprime en una hoja de **11 × 17 pulgadas** (doble carta). El Word no necesita reordenar páginas: por eso el
 cuadernillo tiene que terminar en un **múltiplo de 4 páginas** (3.7), que son las cuatro caras de cada hoja doblada.
 
-**Color de impresión:** la **portada va a color**; el cuerpo y el cierre se imprimen en **blanco y negro**. Por eso nada del cuerpo usa color: texto negro, imágenes en escala de grises, tablas sin sombreado y títulos de sección en negro.
+**Color de impresión:** la **portada va a color**. El cuerpo se imprime en blanco y negro **salvo que lleve ejercicios a color**: desde el 07/11/2026 se admiten texto, imágenes y celdas de color, porque hay preguntas cuya respuesta depende del color (banderas, mapas, reacciones químicas, gráficas de varias series). Esas cartillas se mandan a imprimir a color. Lo único que se sigue rechazando es lo que no se vería sobre el papel: texto casi blanco y celdas casi negras.
 
 ## 3.2 Secciones del documento
 

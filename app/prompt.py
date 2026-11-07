@@ -229,6 +229,10 @@ fracción) la fracción va **siempre apilada**: con barra no se entendería dón
 - Los porcentajes y los decimales: 37,5 %, 0,375.
 - Los números de respuesta cuando no llevan fracción ni raíz: 24, −6, 1 250.
 
+**Del tamaño no te preocupes.** Inserta la ecuación y déjala como venga: al armar la cartilla el sistema
+le pone el tamaño del texto que la rodea, de modo que la fracción se lee igual de grande que la frase en
+la que está. No la agrandes a mano ni le cambies la fuente; si lo haces, se pierde al generar.
+
 **Tres reglas que no se pueden saltar:**
 
 19. La **misma expresión se escribe igual en todas partes**: si en el enunciado la fracción va apilada,

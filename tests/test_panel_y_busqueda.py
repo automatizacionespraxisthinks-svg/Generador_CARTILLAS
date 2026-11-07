@@ -405,6 +405,8 @@ def test_el_prompt_manda_escribir_las_matematicas_con_el_editor_de_ecuaciones(c)
     assert "libro de texto" in t                               # el objetivo, dicho en una línea
     assert "H₂O" in t and "m²" in t                            # lo que va con superíndice, sin editor
     assert "como imagen" in t                                  # una fórmula nunca es una captura
+    assert "Del tamaño no te preocupes" in t                   # lo pone la cartilla, no el archivo
+    assert "No la agrandes a mano" in t
 
 
 def test_el_prompt_pide_la_tematica_explicada(c):

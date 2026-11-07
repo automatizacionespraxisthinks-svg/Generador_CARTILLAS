@@ -139,3 +139,22 @@ def test_generar_el_cuadernillo_no_cambia_las_cartillas(c, dos):
         assert (a["estado"], a["elegidos"], a["codigo"]) == (d["estado"], d["elegidos"], d["codigo"])
         # y cada sesión conserva su propio Excel de claves
         assert [f["tipo"] for f in c.get(f"/api/cartillas/{a['id']}/archivos").json()] == ["docx", "xlsx"]
+
+
+def test_las_hojas_se_numeran_seguidas_de_principio_a_fin(c, dos):
+    """Decisión de la empresa: un cuadernillo es UN folleto grapado, así que la numeración no se reinicia.
+
+    Si alguna sección trajera «pgNumType w:start», la sesión 2 volvería a empezar en 1 y habría dos
+    páginas con el mismo número dentro del mismo cuadernillo.
+    """
+    (ida, _), (idb, _) = dos
+    r = c.post("/api/cuadernillo/generar", json={"cartillas": [ida, idb]})
+    doc = Document(io.BytesIO(r.content))
+    reinicios = [pg.get(W + "start") for sect in doc.element.body.iter(W + "sectPr")
+                 for pg in sect.findall(W + "pgNumType") if pg.get(W + "start")]
+    assert not reinicios, f"hay secciones que reinician la numeración: {reinicios}"
+
+    # y las portadas conservan su pie propio, el que va sin número
+    primeros = [sect for sect in doc.element.body.iter(W + "sectPr")
+                if any(f.get(W + "type") == "first" for f in sect.findall(W + "footerReference"))]
+    assert len(primeros) >= 2, "la portada y la media portada deben tener cada una su pie de primera página"

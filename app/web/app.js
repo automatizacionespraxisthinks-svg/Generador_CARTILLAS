@@ -1019,11 +1019,15 @@ function vistaRevision(c) {
         </label>
         <p class="nota" id="g-archivos">El Word y el Excel salen con ese mismo nombre.</p>
         <div class="maquetacion">
+          ${OPC && OPC.hay_word === false ? `
+          <small class="nota">Para <b>aprovechar el espacio</b> hay que medir la cartilla con Microsoft Word, y este
+            servidor no lo tiene. Ármala en el computador donde esté Word si quieres adelantar preguntas a los
+            huecos del final de cada columna; aquí la cartilla se genera igual, solo que sin ese ajuste.</small>` : `
           <button type="button" class="boton claro" id="btn-maqueta" ${generada ? "disabled" : ""}
                   title="${generada ? "Solo en borrador: vuelve al paso 2 si necesitas cambiar el orden" : "Mide la cartilla con Word y adelanta preguntas que quepan en los huecos"}">
             Aprovechar el espacio</button>
           <small class="nota">Adelanta preguntas de la misma sección que quepan en el espacio que sobra al final de
-            una columna. Cambia la numeración, nunca la sección ni los bloques. Tarda cerca de un minuto.</small>
+            una columna. Cambia la numeración, nunca la sección ni los bloques. Tarda cerca de un minuto.</small>`}
           <p class="nota" id="msg-maqueta" role="status"></p>
         </div>
         <div class="bar-acciones" style="margin-bottom:0">

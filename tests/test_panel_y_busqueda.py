@@ -406,13 +406,14 @@ def test_el_prompt_manda_escribir_las_matematicas_con_el_editor_de_ecuaciones(c)
     assert "como imagen" in t                                  # una fórmula nunca es una captura
 
 
-def test_el_prompt_explica_que_la_tematica_agrupa(c):
-    """En 6° salieron 189 temáticas para 190 ejercicios: así el buscador no sirve."""
+def test_el_prompt_pide_la_tematica_explicada(c):
+    """Decisión del usuario: la temática se prefiere explicada, para elegir sin abrir la pregunta."""
     t = c.get("/api/prompt").json()["texto"]
-    assert "agrupar varias preguntas" in t
-    assert "dos a seis palabras" in t
+    assert "explicada y precisa" in t
+    assert "sin abrirla" in t                                  # para qué sirve que sea explicada
     assert "Así SÍ" in t and "Así NO" in t                     # la tabla de ejemplos buenos y malos
-    assert "entre 4 y 8 temáticas" in t                        # la referencia que se puede comprobar
+    assert "150 caracteres" in t                               # el límite que aguanta la base
+    assert "letra por letra" in t                              # la misma redacción si evalúan lo mismo
 
 
 def test_el_prompt_cubre_la_presentacion_y_las_opciones_con_figura(c):

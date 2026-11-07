@@ -93,7 +93,7 @@ Los rótulos `TABLA DE RESPUESTAS`, `TABLA DE EXCEL` y `TABLA DE GLOSARIO` van e
 
 - **Superíndices y subíndices** (x², H₂O, cos²θ) con el formato de texto de Word. En Matemáticas, Física, Química, Biología y Tecnología y Medio Ambiente, el sistema **rechaza** cualquier letra, `)` o `θ` seguida de un número sin ese formato: `x2`, `H2O`, `(a+b)2`.
 - **Fracciones** en línea: numerador en superíndice, barra normal, denominador en subíndice (⁵/₆). El sistema **rechaza** cualquier `número/número` en texto normal, en cualquier materia. Las fechas se escriben sin barra: «12 de mayo de 2024».
-- **Editor de ecuaciones de Word** solo para raíces, sumatorias, integrales, matrices y fracciones dentro de fracciones.
+- **Editor de ecuaciones de Word** para todas las fracciones (van apiladas, como en un libro), las raíces, las sumatorias, las integrales, las matrices y los números mixtos. Desde el 06/11/2026 el validador rechaza `3/8`, `3⁄8`, `³/₈`, `√49` y `x^2`.
 - **Prohibido:** Microsoft Equation 3.0, MathType, cualquier objeto incrustado, y ecuaciones pegadas como imagen.
 
 ## Imágenes y gráficas

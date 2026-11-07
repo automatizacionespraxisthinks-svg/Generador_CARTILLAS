@@ -80,6 +80,14 @@ devolvérmelo **en el formato exacto de carga**, un archivo por ejercicio, para 
 suba a la página. No cambies el contenido pedagógico de las preguntas: solo ordénalas en este formato y
 completa los datos que faltan.
 
+Estos ejercicios **se van a volver a usar durante años**, así que sé estricto con la calidad: un archivo mal
+armado se rechaza al subirlo y hay que rehacerlo entero.
+
+**Antes de empezar, dime en una línea:** el **grado** y la **materia** (y la submateria, si la lleva) que
+detectaste en el simulacro, y con qué valores de pensamiento y competencia vas a trabajar, tomados del
+punto 5. Si el simulacro mezcla materias o grados, dilo y sepáralos. Así yo confirmo antes de que empieces,
+y no se pierde el trabajo.
+
 ══════════════════════════════════════════════════════════════════════
 1. QUÉ ME TIENES QUE DEVOLVER
 ══════════════════════════════════════════════════════════════════════
@@ -186,9 +194,13 @@ libro de texto**: las fracciones apiladas, las raíces con su signo y su barra, 
 En Word: **Insertar › Ecuación** (o Alt + «=»). La ecuación va **en la misma línea del texto**, nunca como
 imagen aparte ni como captura de pantalla.
 
+**El validador lo exige: un archivo con «3/8», «³/₈», «√49» o «x^2» se RECHAZA** y no entra al banco.
+Arréglalo **antes** de subirlo, no después.
+
 **Va con el editor de ecuaciones, siempre:**
 
-- Fracciones: tres octavos se escribe apilado, **nunca** «3/8» ni «3⁄8» ni «tres octavos» en cifras.
+- Fracciones: tres octavos va **apilado**, el 3 sobre el 8. No vale «3/8», ni «3⁄8» con la barra de
+  fracción, ni «³/₈» con superíndice y subíndice: las tres se imprimen en línea y no parecen un libro.
 - Raíces: **nunca** «√25» con el carácter suelto; la raíz lleva su barra sobre todo el radicando, y la
   raíz cúbica o enésima lleva su índice.
 - Números mixtos: dos y un cuarto se escribe con la fracción apilada al lado del entero.
@@ -295,24 +307,26 @@ Los DBA de **Inglés de 6°** (MEN) son estos:
 **Temática**: **obligatoria**, y es el filtro principal del buscador. Aquí se equivoca casi todo el mundo,
 así que léelo con cuidado.
 
-La temática nombra **el contenido que se evalúa**, no la situación de esa pregunta en particular. Tiene que
-servir para **agrupar varias preguntas**: si cada pregunta termina con su propia temática, la lista se
-vuelve inservible y ya no se puede buscar nada.
+La temática tiene que ser **explicada y precisa**: al leerla, quien arma la cartilla debe saber qué evalúa
+esa pregunta **sin abrirla**, y poder decidir si le sirve para una prueba concreta. Prefiero una temática
+larga y clara antes que una etiqueta corta y ambigua.
 
-- Escríbela en **dos a seis palabras**, como el título de un tema en la malla curricular.
-- **Nunca** metas el contexto de la pregunta: ni los nombres, ni las cantidades, ni la situación.
-- Varias preguntas del mismo contenido llevan la **misma temática, escrita letra por letra igual**.
-- Como referencia: por cada 20 preguntas de una materia deberían salir entre 4 y 8 temáticas, no 20.
+- Dice **qué contenido** se evalúa y **qué se hace con él** (comparar, clasificar, calcular, interpretar).
+- Si hace falta para distinguirla de otra parecida, añade la condición: «con distinto denominador»,
+  «en el plano cartesiano», «a partir de una tabla de datos».
+- Escríbela como una frase, **sin punto final** y con 150 caracteres como máximo.
+- No metas los nombres propios ni las cantidades del enunciado: «Valeria», «36 estudiantes», «5⁄12» no
+  van en la temática. El contexto sí; los datos concretos no.
+- Si varias preguntas evalúan **exactamente** lo mismo, escríbeles la **misma temática, letra por letra**.
 
-| Así SÍ | Así NO |
-|---|---|
-| Suma de fracciones heterogéneas | Adición de fracciones con distinto denominador en una receta de cocina |
-| Potencias de la unidad imaginaria | Las potencias de i se repiten en un ciclo de cuatro valores |
-| Ramas del poder público | Destierro por exceso de poder en Atenas |
-| Células procariotas y eucariotas | Comparación entre una bacteria y una célula vegetal observada al microscopio |
+| Así SÍ | Así NO (demasiado vago) | Así NO (es el enunciado) |
+|---|---|---|
+| Adición de fracciones con distinto denominador | Fracciones | Andrés se comió 3 de 8 porciones de pizza |
+| Potencias de la unidad imaginaria y su ciclo de cuatro valores | Números complejos | Ciclo de las potencias de i cuando el exponente es 7 |
+| Ramas del poder público y sus funciones | Sociales | Destierro de un ciudadano por exceso de poder en Atenas |
+| Diferencias entre células procariotas y eucariotas | Células | Comparación entre la bacteria del yogur y una célula de cebolla |
 
-**Si el simulacro ya trae la temática y el contenido de la pregunta no cambia, consérvala tal cual** —
-salvo que sea una frase larga con el contexto dentro: en ese caso recórtala al tema y dímelo al final.
+**Si el simulacro ya trae la temática y el contenido de la pregunta no cambia, consérvala tal cual.**
 
 ══════════════════════════════════════════════════════════════════════
 6. SI EL ARCHIVO YA TRAE LA INFORMACIÓN  ← LO MÁS IMPORTANTE
@@ -369,5 +383,18 @@ Antes de darme cada archivo, repásalo contra las reglas del punto 2 y las de lo
 - Si hay imágenes, déjalas indicadas así: «[IMAGEN: descripción de lo que debe ir aquí]», en su propio
   párrafo, y yo las pego en el Word.
 - Al final, dime cuántos ejercicios quedaron de cada materia y de cada nivel.
+
+**Lista de chequeo: pásala a cada archivo antes de dármelo.** Si algo falla, el sistema lo rechaza entero.
+
+1.  Cuatro opciones A, B, C y D, cada una en su párrafo, ninguna dependiente de otra.
+2.  El enunciado no empieza por un número y su último párrafo termina en «?».
+3.  Ninguna fracción con barra, ninguna «√» suelta, ningún «^»: todo con el editor de ecuaciones.
+4.  La misma expresión escrita igual en el enunciado y en las cuatro opciones.
+5.  Los tres rótulos de tabla escritos tal cual, con los encabezados exactos y las columnas N° y Preg. vacías.
+6.  La justificación no nombra ninguna letra.
+7.  Grado, materia, submateria, pensamiento y competencia salen de las listas del punto 5, escritos igual.
+8.  La temática explica qué evalúa la pregunta y no trae nombres ni cantidades del enunciado.
+9.  Sin la línea ➤, sin viñetas automáticas, sin control de cambios, una sola fuente y un solo tamaño.
+10. En los bloques y las partes, el crédito del recurso está puesto; en los ejercicios sueltos, no hay.
 
 Empieza cuando te pase el simulacro."""

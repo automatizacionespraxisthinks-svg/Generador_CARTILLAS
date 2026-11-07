@@ -803,29 +803,41 @@ Ventajas: conservan la fuente del documento, se ven limpios y no se rompen nunca
 
 Las escrituras legítimas que cumplen ese patrón (`B12`, `MP3`, `COVID19`…) se registran en una **lista de excepciones** editable desde la aplicación. Lo que está en la lista se acepta en todas las materias.
 
-### 2.9.2 Fracciones
+### 2.9.2 Fracciones  *(norma cambiada el 06/11/2026)*
 
-Las fracciones se escriben en **línea, con superíndice y subíndice**, siguiendo el estilo que ya usan las cartillas:
+Las fracciones van **apiladas**, hechas con el editor de ecuaciones de Word: el numerador sobre la barra y el denominador debajo, como en un libro de texto.
 
-```
-⁵/₆      numerador en superíndice · barra normal · denominador en subíndice
-```
+**Queda prohibida cualquier fracción escrita con barra**, y el validador la rechaza con la regla 18:
 
-Esta forma:
-- Cabe en una columna de 9,12 cm sin alterar el interlineado.
-- Mantiene Tahoma.
-- No introduce Cambria Math.
+| Forma | Veredicto |
+|---|---|
+| `3/8` con barra normal | rechazada |
+| `3⁄8` con barra de fracción (U+2044) o `3∕8` (U+2215) | rechazada |
+| `³/₈` con superíndice y subíndice | rechazada |
+| fracción apilada del editor de ecuaciones | **correcta** |
 
-**No se usan fracciones de dos pisos** dentro del texto corrido, porque descuadran el renglón en dos columnas.
+**Por qué cambió.** Hasta la v1.2 se aceptaba `³/₈` porque cabía en la columna sin alterar el interlineado. En la práctica se lee como «tres barra ocho» y no se parece a un libro de matemáticas, que es el estándar de calidad que la empresa quiere para un banco de ejercicios que se va a reutilizar durante años. El costo es que el renglón que lleva una fracción crece unos milímetros; se acepta.
+
+Siguen escribiéndose como texto normal, porque no son fracciones:
+
+- Las razones en prosa: «3 de cada 8 estudiantes», «la razón es de 3 a 8».
+- Los porcentajes y los decimales: 37,5 %, 0,375.
+- Las unidades compuestas con letras: km/h, m/s.
 
 ### 2.9.3 Editor de ecuaciones de Word (OMML)
 
-Se usa **solo** cuando la expresión no se puede escribir en línea:
+Se usa en **toda expresión que ocupe dos alturas** o que lleve un signo que no es un carácter corriente:
 
-- Raíces
-- Sumatorias, productorias, integrales
+- Fracciones y números mixtos
+- Raíces, de cualquier índice
+- Sumatorias, productorias, integrales, límites
 - Matrices y sistemas de ecuaciones
-- Fracciones dentro de fracciones
+- Potencias cuyo exponente es una expresión
+
+Además, el validador rechaza con la regla 18:
+
+- El signo `√` escrito como carácter suelto: la raíz lleva su barra sobre todo el radicando.
+- Las potencias escritas con símbolos: `x^2`, `2**3`. Van con superíndice de Word o con el editor.
 
 La ecuación se inserta con **Insertar → Ecuación** y queda en Cambria Math dentro del objeto. Fuera de la ecuación todo sigue en Tahoma.
 
@@ -1925,7 +1937,7 @@ Además, las preguntas 74, 75 y 76 no traen DBA mientras que la 69 sí.
 
 - 112 superíndices/subíndices de texto: **correcto**, es el estándar adoptado.
 - Solo 2 ecuaciones OMML en 140 preguntas: consistente con la regla de usar el editor solo para lo estructural.
-- Las fracciones están en línea con superíndice y subíndice: **correcto**, se adopta como estándar.
+- Las fracciones están en línea con superíndice y subíndice: se adoptó como estándar en la v1.2 y **se revocó el 06/11/2026**; ahora van apiladas (ver 2.9.2).
 
 ## 6.9 Lo que ya está bien y se conserva
 

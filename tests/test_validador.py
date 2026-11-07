@@ -361,6 +361,57 @@ def test_fraccion_en_texto_plano():
     assert 18 in reglas(validar_doc(doc))
 
 
+@pytest.mark.parametrize("barra", ["/", "⁄", "∕"])
+def test_la_fraccion_con_cualquier_barra_se_rechaza(barra):
+    """Word ofrece tres barras que a simple vista son iguales; ninguna hace una fracción de libro."""
+    doc = Document(SUELTO)
+    p = parrafo_con(doc, "B. ")
+    p.runs[-1].text = f"3{barra}4"
+    assert 18 in reglas(validar_doc(doc))
+
+
+def test_la_fraccion_con_superindice_y_subindice_ya_no_basta():
+    """Desde el 06/11/2026 la norma pide la fracción APILADA: ³/₄ se imprime en línea, no como un libro."""
+    doc = Document(SUELTO)
+    p = parrafo_con(doc, "B. ")
+    p.runs[-1].text = ""
+    for texto, arriba, abajo in (("3", True, False), ("/", False, False), ("4", False, True)):
+        r = p.add_run(texto)
+        r.font.superscript, r.font.subscript = arriba, abajo
+        r.font.name, r.font.size = "Tahoma", Pt(9)
+    assert 18 in reglas(validar_doc(doc))
+
+
+def test_la_raiz_escrita_como_caracter_se_rechaza():
+    doc = Document(SUELTO)
+    poner_texto(parrafo_con(doc, "Camila compra"), "Camila calcula √49 y compra dos jugos.")
+    assert 18 in reglas(validar_doc(doc))
+
+
+@pytest.mark.parametrize("texto", ["Camila eleva x^2 y compra jugos.", "Camila calcula 2**3 y compra jugos."])
+def test_la_potencia_con_simbolos_se_rechaza(texto):
+    doc = Document(SUELTO)
+    poner_texto(parrafo_con(doc, "Camila compra"), texto)
+    assert 18 in reglas(validar_doc(doc))
+
+
+def test_la_ecuacion_de_word_es_la_forma_correcta():
+    """Una fracción hecha con el editor de ecuaciones no lleva barra en el texto: pasa sin tocarla."""
+    from lxml import etree
+
+    from app.validador.docx_lector import NS
+
+    M = "http://schemas.openxmlformats.org/officeDocument/2006/math"
+    tres_cuartos = (f'<m:oMath xmlns:m="{M}" xmlns:w="{NS["w"]}"><m:f>'
+                    '<m:num><m:r><m:t>3</m:t></m:r></m:num>'
+                    '<m:den><m:r><m:t>4</m:t></m:r></m:den></m:f></m:oMath>')
+    doc = Document(SUELTO)
+    p = parrafo_con(doc, "B. ")
+    p.runs[-1].text = ""
+    p._p.append(etree.fromstring(tres_cuartos))
+    assert 18 not in reglas(validar_doc(doc))
+
+
 def test_marcadores_de_completar_texto_desordenados():
     doc = Document(PARTE)
     p = parrafo_con(doc, "Last Saturday")

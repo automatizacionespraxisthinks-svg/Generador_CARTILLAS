@@ -66,6 +66,9 @@ RE_JUST_LETRA = [
 ]
 RE_LETRA_PARENTESIS = re.compile(r"(?<![\w(])[A-D]\)")
 DIGITOS = set("0123456789")   # «²» o «₅» ya son superíndice/subíndice: no cuentan
+RE_POTENCIA_TEXTO = re.compile(r"\^\s*[-−]?\d|\*\*\s*[-−]?\d")   # x^2, 2**3: se escriben con superíndice
+# la barra normal y las dos «barras de fracción» de Word, que a simple vista son iguales
+BARRAS_FRACCION = "/⁄∕"
 RE_MARCADOR = re.compile(r"\(#(\d+)\)")
 SIN_DATO = {"no aplica", "no aplican", "na", "n/a", "ninguno", "ninguna", "no tiene", "no hay",
             "sin submateria", "sin dba", "-", "--", "---", "n.a.", "no corresponde"}
@@ -786,7 +789,7 @@ class Validador:
                     self.r.error(18, donde, f"«{palabra}» tiene un número sin superíndice ni subíndice. Escríbelo con el formato de Word (x², H₂O). Si es una escritura correcta, pide que se agregue a la lista de excepciones.")
                     break
         for i, (c, _) in enumerate(chars):
-            if c != "/":
+            if c not in BARRAS_FRACCION:
                 continue
             j = i - 1
             while j >= 0 and chars[j][0] == " ":
@@ -794,9 +797,21 @@ class Validador:
             k = i + 1
             while k < len(chars) and chars[k][0] == " ":
                 k += 1
-            if j >= 0 and k < len(chars) and chars[j][0] in DIGITOS and chars[k][0] in DIGITOS and chars[j][1] is None and chars[k][1] is None:
-                self.r.error(18, donde, f"«{recorte(texto, j, k + 1, 6)}» es una fracción en texto plano. Escríbela con numerador en superíndice y denominador en subíndice (³/₄). Las fechas se escriben sin barra.")
+            if j >= 0 and k < len(chars) and chars[j][0] in DIGITOS and chars[k][0] in DIGITOS:
+                # desde el 06/11/2026 tampoco vale ³/₄: la fracción va APILADA, como en un libro de texto
+                self.r.error(18, donde, f"«{recorte(texto, j, k + 1, 6)}» es una fracción escrita con barra. "
+                                        "Escríbela con el editor de ecuaciones de Word (Insertar › Ecuación), "
+                                        "apilada como en un libro: ni «3/8» ni «³/₈». Las fechas van sin barra.")
                 break
+        raiz = texto.find("√")
+        if raiz >= 0:
+            self.r.error(18, donde, f"«{recorte(texto, raiz, raiz + 6)}» lleva el signo de raíz escrito como "
+                                    "carácter. La raíz va con el editor de ecuaciones de Word (Insertar › "
+                                    "Ecuación), con su barra sobre todo lo que está dentro.")
+        m = RE_POTENCIA_TEXTO.search(texto)
+        if m:
+            self.r.error(18, donde, f"«{recorte(texto, m.start(), m.end())}» es una potencia escrita con "
+                                    "símbolos. Usa superíndice de Word (x²) o el editor de ecuaciones.")
 
     # ================================================================== formato
     def revisar_formato(self, u, impresos):

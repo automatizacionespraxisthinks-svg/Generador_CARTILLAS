@@ -393,6 +393,37 @@ def test_el_prompt_trae_los_dba_de_ingles_y_la_regla_de_la_tematica(c):
     assert "consérvala tal cual" in t
 
 
+def test_el_prompt_manda_escribir_las_matematicas_con_el_editor_de_ecuaciones(c):
+    """La auditoría encontró 34 ejercicios con fracciones escritas «3/8»: se imprimen en línea, no apiladas."""
+    t = c.get("/api/prompt").json()["texto"]
+    assert "editor de ecuaciones" in t.lower()
+    assert "Insertar › Ecuación" in t or "Insertar > Ecuación" in t
+    for caso in ("Fracciones", "Raíces", "Números mixtos"):
+        assert caso in t, f"el prompt no dice qué hacer con: {caso}"
+    assert "nunca" in t.lower() and "3/8" in t                 # el error concreto, con su ejemplo
+    assert "libro de texto" in t                               # el objetivo, dicho en una línea
+    assert "H₂O" in t and "m²" in t                            # lo que va con superíndice, sin editor
+    assert "como imagen" in t                                  # una fórmula nunca es una captura
+
+
+def test_el_prompt_explica_que_la_tematica_agrupa(c):
+    """En 6° salieron 189 temáticas para 190 ejercicios: así el buscador no sirve."""
+    t = c.get("/api/prompt").json()["texto"]
+    assert "agrupar varias preguntas" in t
+    assert "dos a seis palabras" in t
+    assert "Así SÍ" in t and "Así NO" in t                     # la tabla de ejemplos buenos y malos
+    assert "entre 4 y 8 temáticas" in t                        # la referencia que se puede comprobar
+
+
+def test_el_prompt_cubre_la_presentacion_y_las_opciones_con_figura(c):
+    t = c.get("/api/prompt").json()["texto"]
+    assert "blanco y negro" in t                               # la cartilla no se imprime a color
+    assert "8,4 cm" in t                                       # el ancho real de una columna
+    assert "Tabla con cuadrícula" in t                         # el estilo de tabla que el sistema espera
+    assert "mismo párrafo" in t and "letra" in t               # la opción que es una figura
+    assert "submateria vacía" in t                             # Ciencias Sociales en 10° y 11°
+
+
 def test_el_prompt_copia_los_encabezados_del_validador(c):
     """Si mañana cambia un encabezado, el prompt cambia solo: los toma de la misma constante."""
     from app.validador.validador import ENC_EXCEL, ENC_GLOSARIO, ENC_RESPUESTAS

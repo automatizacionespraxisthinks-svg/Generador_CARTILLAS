@@ -100,6 +100,10 @@ Hay tres formas de ejercicio. Usa la que corresponda:
     C. [opción, en un solo párrafo]
     D. [opción, en un solo párrafo]
 
+    Si las opciones **son figuras** («¿en cuál de estos rectángulos está sombreada la fracción?»), la
+    figura va en el **mismo párrafo** que su letra, detrás de ella: «A. [IMAGEN: …]». Es el único sitio
+    donde una imagen comparte párrafo con texto; en el enunciado y en la lectura va siempre sola.
+
     TABLA DE RESPUESTAS
     | {enc_respuestas} |
     |    | B | Por qué esa es la correcta, en una o dos frases, sin nombrar ninguna letra |
@@ -111,9 +115,6 @@ Hay tres formas de ejercicio. Usa la que corresponda:
     TABLA DE GLOSARIO   (opcional, máximo 3 términos por pregunta)
     | {enc_glosario} |
     | 1 | palabra difícil que APARECE en el texto de esa pregunta | explicación corta, máx. 150 caracteres |
-
-    En el glosario **sí se pueden escribir fórmulas**: superíndices, subíndices y ecuaciones del editor de
-    Word (i² = −1, H₂O, a²+b²=c²). Lo que no se puede meter ahí son imágenes ni objetos incrustados.
 
     **Los encabezados van escritos exactamente así, con esas tildes y esos puntos.**
     **La primera columna de RESPUESTAS (N°) y la de EXCEL (Preg.) van VACÍAS**: el número lo pone el
@@ -168,14 +169,97 @@ Hay tres formas de ejercicio. Usa la que corresponda:
 14. Una sola fuente en todo el archivo y un solo tamaño de letra. **Sin viñetas ni numeración automática**
     de Word: si hay que numerar algo, escribe el número a mano.
 15. Nada de comentarios, notas para el autor, «TODO», ni control de cambios.
-16. Las fórmulas y los símbolos van con **superíndice y subíndice de verdad** (H₂O, m², 10³), no como
-    texto plano ni como imagen. Nada de objetos incrustados.
+16. Las fórmulas van con el **editor de ecuaciones de Word** o con superíndices y subíndices de verdad
+    (ver el punto 3, que es donde se explica con detalle). Nada de objetos incrustados ni de capturas.
 17. Las imágenes van **solas en su párrafo**, centradas, en línea con el texto y de 8,4 cm como máximo.
-    Nunca una imagen en el mismo párrafo que el texto. Sin tablas dentro de otras tablas.
+    La única excepción son las opciones que son figuras: ahí la imagen va detrás de su letra, en el mismo
+    párrafo. Sin tablas dentro de otras tablas.
 18. Página carta (21,59 × 27,94 cm), vertical.
 
 ══════════════════════════════════════════════════════════════════════
-3. VALORES QUE PUEDES USAR (son los del sistema; no inventes otros)
+3. LAS MATEMÁTICAS SE ESCRIBEN CON EL EDITOR DE ECUACIONES
+══════════════════════════════════════════════════════════════════════
+
+Esto es lo que más se hace mal y lo que más se nota al imprimir. La cartilla tiene que verse **como un
+libro de texto**: las fracciones apiladas, las raíces con su signo y su barra, los exponentes arriba.
+
+En Word: **Insertar › Ecuación** (o Alt + «=»). La ecuación va **en la misma línea del texto**, nunca como
+imagen aparte ni como captura de pantalla.
+
+**Va con el editor de ecuaciones, siempre:**
+
+- Fracciones: tres octavos se escribe apilado, **nunca** «3/8» ni «3⁄8» ni «tres octavos» en cifras.
+- Raíces: **nunca** «√25» con el carácter suelto; la raíz lleva su barra sobre todo el radicando, y la
+  raíz cúbica o enésima lleva su índice.
+- Números mixtos: dos y un cuarto se escribe con la fracción apilada al lado del entero.
+- Potencias con variable o con expresión en el exponente, ecuaciones, sistemas de ecuaciones, matrices,
+  sumatorias, integrales, límites y desigualdades compuestas.
+- Cualquier expresión que ocupe dos alturas (algo arriba y algo abajo).
+
+**Va con superíndice y subíndice de Word, sin editor de ecuaciones:**
+
+- Unidades y potencias sencillas dentro de una frase: m², cm³, 10³, x².
+- Fórmulas químicas: H₂O, CO₂, C₆H₁₂O₆.
+- Grados y ordinales: 25 °C, 1.°
+
+**Se escribe como texto normal (no es una fórmula):**
+
+- Las razones y proporciones en prosa: «3 de cada 8 estudiantes», «la razón es de 3 a 8».
+- Los porcentajes y los decimales: 37,5 %, 0,375.
+- Los números de respuesta cuando no llevan fracción ni raíz: 24, −6, 1 250.
+
+**Tres reglas que no se pueden saltar:**
+
+19. La **misma expresión se escribe igual en todas partes**: si en el enunciado la fracción va apilada,
+    en las cuatro opciones va apilada. Mezclar «3/8» en una opción y la fracción apilada en otra hace que
+    el estudiante crea que son cosas distintas.
+20. En el **glosario sí se admiten fórmulas**: superíndices, subíndices y ecuaciones del editor de Word
+    (i² = −1, a² + b² = c²). Lo que no se puede meter ahí son imágenes ni objetos incrustados.
+21. Nunca una fórmula **como imagen**. Si el original la trae como imagen, vuélvela a escribir con el
+    editor de ecuaciones.
+
+══════════════════════════════════════════════════════════════════════
+4. CALIDAD DE LA PREGUNTA Y DE LA PRESENTACIÓN
+══════════════════════════════════════════════════════════════════════
+
+**La pregunta**
+
+- El enunciado da **todo lo necesario** para responder y nada más: sin datos de adorno que no se usan.
+- La situación es **concreta y verosímil**, con nombres y cantidades realistas del contexto colombiano.
+- Las cuatro opciones miden lo mismo: una correcta y **tres errores que un estudiante cometería de
+  verdad** (confundir el orden de una operación, invertir una relación, quedarse a mitad del
+  procedimiento). Nada de opciones absurdas que se descartan de un vistazo.
+- Las cuatro opciones tienen **largo parecido**: si la correcta es siempre la más larga, se adivina.
+- Ordena las opciones con un criterio: de menor a mayor si son números, cronológico si son fechas.
+- La justificación explica **por qué el contenido es correcto**, no por qué las otras están mal, y cabe
+  en una o dos frases.
+
+**El texto**
+
+- Párrafos **justificados**. No uses saltos de línea a mano para cuadrar el texto ni espacios repetidos
+  para alinear: la cartilla va a dos columnas y todo eso se desbarata.
+- Sin sangrías manuales, sin tabulaciones y sin párrafos vacíos entre las opciones.
+- Revisa la ortografía y la tildación. Lo que escribas se imprime tal cual.
+
+**Las imágenes**
+
+- Nítidas y con el texto legible **a 8,4 cm de ancho**, que es el ancho de una columna. Si es una gráfica
+  con rótulos diminutos, no sirve: hay que rehacerla.
+- Sin marcas de agua, sin bordes blancos sobrantes, sin capturas de pantalla con el fondo de la ventana.
+- En blanco y negro o en gris: **la cartilla se imprime en blanco y negro**. Si la respuesta depende del
+  color («el punto rojo»), la pregunta no sirve; usa formas, tramas o rótulos.
+- Una sola imagen por párrafo, centrada y en línea con el texto.
+
+**Las tablas**
+
+- Con **bordes visibles** (estilo «Tabla con cuadrícula») y **una fila de encabezado** con los títulos.
+- Sin tablas anidadas y sin celdas combinadas en los datos.
+- Lo más estrechas posible: en la cartilla caben en 8,4 cm. Si tiene muchas columnas, divídela o
+  reescríbela como texto.
+- Los números y las palabras cortas los centra el sistema solo: no te preocupes por eso.
+
+══════════════════════════════════════════════════════════════════════
+5. VALORES QUE PUEDES USAR (son los del sistema; no inventes otros)
 ══════════════════════════════════════════════════════════════════════
 
 **Grado**: {grados}
@@ -195,6 +279,12 @@ Políticas es una submateria de Ciencias Sociales. Si el simulacro las trae escr
 sistema las entiende igual, así que respeta lo que diga el original. En las materias sin DBA oficial
 (Filosofía, Ética, Informática, Educación Física, Educación Artística, Religión) deja el DBA vacío.
 
+**Cuidado con Ciencias Sociales en 10° y 11°.** No todo lo de Ciencias Sociales es Ciencias Económicas y
+Políticas. La historia, la geografía, la Constitución y la democracia van con la **submateria vacía**;
+solo lleva «Ciencias Económicas y Políticas» lo que trate de economía, mercado, Estado o sistemas
+políticos. Marcarlo todo como Económicas y Políticas deja sin ejercicios la sección de Ciencias Sociales
+de esos grados y la cartilla no se puede armar.
+
 **DBA**: toma el número de la **malla del grado** y escríbelo como «DBA 4». Si la malla da varios DBA para el
 mismo tema, elige el que corresponde al contenido de esa pregunta. Si no lo sabes con certeza, déjalo vacío:
 es preferible vacío a equivocado.
@@ -202,14 +292,30 @@ es preferible vacío a equivocado.
 Los DBA de **Inglés de 6°** (MEN) son estos:
 {dba_ingles}
 
-**Temática**: **obligatoria**, es el filtro principal del buscador. El tema concreto de la pregunta, en una
-frase corta y específica, por ejemplo «Comparación de
-fracciones con distinto denominador» o «Células procariotas y eucariotas». Es lo que después se usa para
-buscar los ejercicios, así que sé preciso y usa siempre la misma redacción para el mismo tema.
-**Si el simulacro ya trae la temática y el contenido de la pregunta no cambia, consérvala tal cual.**
+**Temática**: **obligatoria**, y es el filtro principal del buscador. Aquí se equivoca casi todo el mundo,
+así que léelo con cuidado.
+
+La temática nombra **el contenido que se evalúa**, no la situación de esa pregunta en particular. Tiene que
+servir para **agrupar varias preguntas**: si cada pregunta termina con su propia temática, la lista se
+vuelve inservible y ya no se puede buscar nada.
+
+- Escríbela en **dos a seis palabras**, como el título de un tema en la malla curricular.
+- **Nunca** metas el contexto de la pregunta: ni los nombres, ni las cantidades, ni la situación.
+- Varias preguntas del mismo contenido llevan la **misma temática, escrita letra por letra igual**.
+- Como referencia: por cada 20 preguntas de una materia deberían salir entre 4 y 8 temáticas, no 20.
+
+| Así SÍ | Así NO |
+|---|---|
+| Suma de fracciones heterogéneas | Adición de fracciones con distinto denominador en una receta de cocina |
+| Potencias de la unidad imaginaria | Las potencias de i se repiten en un ciclo de cuatro valores |
+| Ramas del poder público | Destierro por exceso de poder en Atenas |
+| Células procariotas y eucariotas | Comparación entre una bacteria y una célula vegetal observada al microscopio |
+
+**Si el simulacro ya trae la temática y el contenido de la pregunta no cambia, consérvala tal cual** —
+salvo que sea una frase larga con el contexto dentro: en ese caso recórtala al tema y dímelo al final.
 
 ══════════════════════════════════════════════════════════════════════
-4. SI EL ARCHIVO YA TRAE LA INFORMACIÓN  ← LO MÁS IMPORTANTE
+6. SI EL ARCHIVO YA TRAE LA INFORMACIÓN  ← LO MÁS IMPORTANTE
 ══════════════════════════════════════════════════════════════════════
 
 La mayoría de los simulacros **ya vienen con todo**: la clave, la justificación y los datos pedagógicos.
@@ -249,13 +355,13 @@ Qué tienes que hacer con eso:
     ese recurso una sola vez al principio. Si el recurso **no trae crédito**, escríbele uno —por ejemplo
     «Elaboración propia. PRAXIS – THINKS, 2026.»— porque en los bloques es obligatorio.
 
-Antes de darme cada archivo, repásalo contra la lista de reglas del punto 2.
+Antes de darme cada archivo, repásalo contra las reglas del punto 2 y las de los puntos 3 y 4.
 
 ══════════════════════════════════════════════════════════════════════
-5. CÓMO TRABAJAR
+7. CÓMO TRABAJAR
 ══════════════════════════════════════════════════════════════════════
 
-- Si el simulacro **no** trae clave ni justificación, dedúcelas y escríbelas tú (si las trae, punto 4).
+- Si el simulacro **no** trae clave ni justificación, dedúcelas y escríbelas tú (si las trae, punto 6).
 - Si una pregunta incumple alguna regla (tiene cinco opciones, dice «todas las anteriores», no termina en
   «?»), **corrígela** y avísame al final en una lista de «cambios que hice».
 - Si una pregunta depende de un texto, una imagen o una tabla compartidos, agrúpala en un bloque de lectura

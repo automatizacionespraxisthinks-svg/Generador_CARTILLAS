@@ -425,6 +425,9 @@ function pintarPanel() {
         simulacro. Te lo devuelve en el formato exacto que acepta la página, con sus tablas de respuestas, de
         Excel y de glosario. El texto se arma solo con los grados, materias y valores que hay ahora mismo en el
         sistema, así que siempre está al día.</p>
+      <p class="nota">Trae las reglas completas de calidad: las <b>matemáticas con el editor de ecuaciones</b>
+        (fracciones apiladas y raíces, como en un libro), cómo escribir la <b>temática</b> para que agrupe y el
+        buscador sirva, y cómo deben venir las imágenes y las tablas para que se impriman bien en blanco y negro.</p>
       <div class="caja-prompt">
         <div class="bar-acciones" style="margin:0 0 8px">
           <button type="button" class="boton" id="btn-copiar-prompt">Copiar el texto</button>
@@ -1053,8 +1056,17 @@ document.addEventListener("click", async e => {
       await navigator.clipboard.writeText(PROMPT);
       msg.textContent = `Copiado: ${PROMPT.length.toLocaleString("es-CO")} caracteres. Pégalo y detrás pega el simulacro.`;
     } catch (err) {
-      $("#texto-prompt").hidden = false;
-      msg.textContent = "No se pudo copiar solo: selecciona el texto de abajo y cópialo a mano.";
+      // algunos navegadores no dejan copiar sin un gesto suyo: se muestra el texto YA SELECCIONADO,
+      // para que baste con Ctrl+C. Son 22.000 caracteres: seleccionarlos a mano es un castigo.
+      const caja = $("#texto-prompt");
+      caja.hidden = false;
+      const r = document.createRange();
+      r.selectNodeContents(caja);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      caja.scrollIntoView({block: "nearest"});
+      msg.textContent = "El texto quedó seleccionado abajo: pulsa Ctrl+C para copiarlo.";
     }
     return;
   }
